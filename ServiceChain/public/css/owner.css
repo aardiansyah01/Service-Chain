@@ -3064,3 +3064,49 @@ body.history-detail-open {
         overflow-wrap: anywhere;
     }
 }
+
+.wallet-connect-button {
+    padding: 9px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.wallet-connect-button:hover {
+    background: #f1f5f9;
+}
+
+.wallet-connect-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+#vehicle-blockchain-status {
+    margin: 12px 0;
+    font-size: 13px;
+}
+
+.vehicle-transfer-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.vehicle-transfer-button:hover {
+    background: #1d4ed8;
+}

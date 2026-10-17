@@ -9,6 +9,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 <body>
     <aside class="admin-sidebar">
@@ -77,20 +80,36 @@
         </div>
 
         <div class="topbar-actions">
-            <div class="wallet-box">
-                <span class="wallet-icon">
+            <div class="admin-wallet-connect">
+                <div class="admin-wallet-icon">
                     <i class="bi bi-wallet2"></i>
-                </span>
-                <div>
-                    <small>WALLET TERHUBUNG</small>
-                    <strong>Belum terhubung</strong>
                 </div>
-            </div>
 
-            <button type="button" class="icon-button notification-button" aria-label="Notifikasi">
-                <i class="bi bi-bell"></i>
-                <span class="notification-dot"></span>
-            </button>
+                <div class="admin-wallet-info">
+                    <span class="admin-wallet-label">WALLET ADMIN</span>
+
+                    <span id="adminWalletAddress" class="admin-wallet-address">
+                        Belum terhubung
+                    </span>
+
+                    <span
+                        id="adminWalletStatus"
+                        class="admin-wallet-status"
+                        role="status"
+                        aria-live="polite"
+                        hidden
+                    ></span>
+                </div>
+
+                <button
+                    type="button"
+                    id="connectAdminWalletButton"
+                    class="admin-wallet-button"
+                    onclick="console.log('TOMBOL ADMIN DIKLIK')"
+                >
+                    Hubungkan Wallet
+                </button>
+            </div>
 
             <div class="admin-account">
                 <div class="admin-avatar">

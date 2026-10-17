@@ -69,37 +69,41 @@
                 </thead>
                 <tbody>
                     @forelse ($services as $service)
-                        <tr>
+                        <tr
+                            class="admin-service-row"
+                            data-service-id="{{ $service->service_id }}"
+                        >
                             <td>
-                                <strong>
-                                    {{ $service->vehicle->brand ?? 'Kendaraan dihapus' }}
-                                    {{ $service->vehicle->model ?? '' }}
-                                </strong>
-                                <small>{{ $service->vehicle->vehicle_id ?? '-' }}</small>
+                                <strong class="js-chain-vehicle">Memuat blockchain...</strong>
+                                <small class="js-chain-vehicle-id">Memuat...</small>
                             </td>
-                            <td>{{ $service->service_type }}</td>
-                            <td>{{ $service->service_date?->format('d M Y') ?? '-' }}</td>
-                            <td>{{ number_format($service->mileage, 0, ',', '.') }} km</td>
-                            <td>Rp{{ number_format((float) $service->cost, 0, ',', '.') }}</td>
+
+                            <td>
+                                <span class="js-chain-service-type">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-service-date">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-mileage">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-cost">Memuat...</span>
+                            </td>
                             <td>
                                 <button
                                     type="button"
                                     class="table-detail-button service-detail-trigger"
                                     aria-label="Lihat detail servis {{ $service->service_id }}"
                                     data-service-id="{{ $service->service_id }}"
-                                    data-vehicle-id="{{ $service->vehicle->vehicle_id ?? '-' }}"
-                                    data-vehicle-type="{{ $service->vehicle->vehicle_type ?? '-' }}"
-                                    data-vehicle-brand="{{ $service->vehicle->brand ?? '-' }}"
-                                    data-vehicle-model="{{ $service->vehicle->model ?? '-' }}"
-                                    data-owner="{{ $service->vehicle->owner->name ?? '-' }}"
-                                    data-workshop="{{ $service->workshop_name }}"
-                                    data-workshop-address="{{ $service->workshop_address }}"
-                                    data-service-type="{{ $service->service_type }}"
-                                    data-description="{{ $service->description }}"
-                                    data-service-date="{{ $service->service_date?->format('d M Y') ?? '-' }}"
-                                    data-cost="{{ number_format((float) $service->cost, 0, ',', '.') }}"
-                                    data-mileage="{{ number_format($service->mileage, 0, ',', '.') }}"
-                                    data-created-at="{{ $service->created_at?->format('d M Y, H:i') ?? '-' }}"
+                                    data-owner-name="{{ $service->owner?->name ?? '-' }}"
+                                    data-owner-id="{{ $service->owner_id ?? '' }}"
+                                    data-workshop-name="{{ $service->workshop_name ?? '-' }}"
+                                    data-workshop-address="{{ $service->workshop_address ?? '-' }}"
+                                    data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
                                 >
                                     <i class="bi bi-eye"></i>
                                     Detail
@@ -147,53 +151,107 @@
                     <span>Service ID</span>
                     <strong id="detailServiceIdField">-</strong>
                 </div>
-                <div class="service-detail-item">
-                    <span>Vehicle ID</span>
-                    <strong id="detailVehicleId">-</strong>
-                </div>
-                <div class="service-detail-item">
-                    <span>Nama Bengkel</span>
-                    <strong id="detailWorkshop">-</strong>
-                </div>
-                <div class="service-detail-item">
-                    <span>Jenis Servis</span>
-                    <strong id="detailServiceType">-</strong>
-                </div>
+
                 <div class="service-detail-item">
                     <span>Tanggal Servis</span>
                     <strong id="detailServiceDate">-</strong>
                 </div>
+
+                <div class="service-detail-item">
+                    <span>Jenis Servis</span>
+                    <strong id="detailServiceType">-</strong>
+                </div>
+
                 <div class="service-detail-item">
                     <span>Biaya Servis</span>
                     <strong id="detailCost">-</strong>
                 </div>
+
                 <div class="service-detail-item">
                     <span>Kilometer</span>
                     <strong id="detailMileage">-</strong>
                 </div>
+
                 <div class="service-detail-item">
-                    <span>Catatan Dibuat</span>
-                    <strong id="detailCreatedAt">-</strong>
+                    <span>Nama Bengkel</span>
+                    <strong id="detailWorkshop">-</strong>
                 </div>
+
                 <div class="service-detail-item service-detail-full">
-                    <span>Deskripsi</span>
+                    <span>Alamat Bengkel</span>
+                    <p id="detailWorkshopAddress">-</p>
+                </div>
+
+                <div class="service-detail-item service-detail-full">
+                    <span>Wallet Bengkel</span>
+                    <strong id="detailWorkshopWallet" class="break-wallet">-</strong>
+                </div>
+
+                <div class="service-detail-item service-detail-full">
+                    <span>Detail Servis</span>
                     <p id="detailDescription">-</p>
+                </div>
+
+                <div class="service-detail-item service-detail-full">
+                    <span>Nilai Hash (serviceHash)</span>
+                    <strong id="detailServiceHash" class="break-wallet">-</strong>
+                </div>
+
+                <div class="service-detail-item service-detail-full">
+                    <span>Bukti Nota</span>
+
+                    <a id="detailReceiptLink" href="#" target="_blank"
+                    rel="noopener noreferrer" hidden>
+                        <i class="bi bi-file-earmark-image"></i>
+                        Lihat bukti nota
+                    </a>
+
+                    <span id="detailReceiptUnavailable">
+                        Bukti nota tidak tersedia
+                    </span>
                 </div>
             </div>
 
             <h3><i class="bi bi-car-front"></i> Informasi Kendaraan</h3>
             <div class="service-detail-grid">
                 <div class="service-detail-item">
-                    <span>Jenis Kendaraan</span>
-                    <strong id="detailVehicleType">-</strong>
+                    <span>ID Kendaraan (vehicleId)</span>
+                    <strong id="detailVehicleId">-</strong>
                 </div>
+
                 <div class="service-detail-item">
-                    <span>Merek dan Model</span>
+                    <span>Merek (brand)</span>
                     <strong id="detailVehicleBrand">-</strong>
                 </div>
-                <div class="service-detail-item service-detail-full">
-                    <span>Pemilik Kendaraan</span>
+
+                <div class="service-detail-item">
+                    <span>Tipe / Model</span>
+                    <strong id="detailVehicleModel">-</strong>
+                </div>
+
+                <div class="service-detail-item">
+                    <span>Warna</span>
+                    <strong id="detailVehicleColor">-</strong>
+                </div>
+
+                <div class="service-detail-item">
+                    <span>Tahun</span>
+                    <strong id="detailVehicleYear">-</strong>
+                </div>
+
+                <div class="service-detail-item">
+                    <span>Nama Owner</span>
                     <strong id="detailOwner">-</strong>
+                </div>
+
+                <div class="service-detail-item">
+                    <span>ID Owner (ownerId)</span>
+                    <strong id="detailOwnerId">-</strong>
+                </div>
+
+                <div class="service-detail-item service-detail-full">
+                    <span>Wallet Address Owner</span>
+                    <strong id="detailOwnerWallet" class="break-wallet">-</strong>
                 </div>
             </div>
 
@@ -213,66 +271,4 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/admin-vehicles-services.css') }}">
-@endpush
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('serviceDetailModal');
-    const closeButtons = [
-        document.getElementById('closeServiceModal'),
-        document.getElementById('doneServiceModal')
-    ];
-
-    const fields = {
-        detailServiceId: 'serviceId',
-        detailServiceIdField: 'serviceId',
-        detailVehicleId: 'vehicleId',
-        detailWorkshop: 'workshop',
-        detailServiceType: 'serviceType',
-        detailServiceDate: 'serviceDate',
-        detailCost: 'cost',
-        detailMileage: 'mileage',
-        detailCreatedAt: 'createdAt',
-        detailDescription: 'description',
-        detailVehicleType: 'vehicleType',
-        detailVehicleBrand: 'vehicleBrand',
-        detailOwner: 'owner',
-        detailWorkshopAddress: 'workshopAddress'
-    };
-
-    document.querySelectorAll('.service-detail-trigger').forEach(button => {
-        button.addEventListener('click', function () {
-            Object.entries(fields).forEach(([elementId, dataKey]) => {
-                document.getElementById(elementId).textContent =
-                    this.dataset[dataKey] || '-';
-            });
-
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('service-modal-open');
-        });
-    });
-
-    function closeModal() {
-        modal.classList.remove('is-open');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('service-modal-open');
-    }
-
-    closeButtons.forEach(button => button.addEventListener('click', closeModal));
-
-    modal.addEventListener('click', function (event) {
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-            closeModal();
-        }
-    });
-});
-</script>
 @endpush

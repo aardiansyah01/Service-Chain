@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'servicechain' => [
+        'rpc_url' => env('SERVICECHAIN_RPC_URL'),
+        'contract_address' => env('SERVICECHAIN_CONTRACT_ADDRESS'),
+        'admin_private_key' => env('SERVICECHAIN_ADMIN_PRIVATE_KEY'),
+    ],
+
 ];

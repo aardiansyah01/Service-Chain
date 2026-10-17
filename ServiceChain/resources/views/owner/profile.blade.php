@@ -40,18 +40,6 @@
 
             <h2>{{ $user->name }}</h2>
             <p class="profile-role">Pemilik Kendaraan</p>
-
-            @if ($user->hasVerifiedEmail())
-                <span class="profile-email-status">
-                    <i class="bi bi-circle-fill"></i>
-                    Email terverifikasi
-                </span>
-            @else
-                <span class="profile-email-status profile-email-unverified">
-                    <i class="bi bi-circle-fill"></i>
-                    Email belum terverifikasi
-                </span>
-            @endif
         </section>
 
         <section class="profile-settings-card">

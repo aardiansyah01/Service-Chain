@@ -126,6 +126,8 @@
                         type="button"
                         class="vehicle-detail-button"
                         data-vehicle-id="{{ $vehicle->vehicle_id }}"
+                        data-owner-name="{{ Auth::user()->name }}"
+                        data-owner-id="{{ Auth::user()->id }}"
                         data-brand="{{ $vehicle->brand }}"
                         data-model="{{ $vehicle->model }}"
                         data-type="{{ $vehicle->vehicle_type }}"
@@ -171,7 +173,6 @@
         @endforelse
     </div>
 
-    {{-- Pagination --}}
     @if ($vehicles->hasPages())
         <div class="vehicle-pagination">
             {{ $vehicles->links() }}
@@ -204,10 +205,18 @@
             </button>
         </div>
 
-        <form action="{{ route('owner.vehicles.store') }}"
-              method="POST"
-              id="vehicleForm">
+        <form
+            action="{{ route('owner.vehicles.store') }}"
+            method="POST"
+            id="vehicleForm"
+            data-prepare-url="{{ route('owner.vehicles.prepare') }}"
+            data-saved-wallet="{{ auth()->user()->wallet_address ?? '' }}"
+        >
             @csrf
+
+            <input type="hidden" name="vehicle_id" value="">
+            <input type="hidden" name="wallet_address" value="">
+            <input type="hidden" name="transaction_hash" value="">
 
             <div class="vehicle-modal-body">
 
@@ -356,6 +365,11 @@
                     Simpan Kendaraan
                 </button>
             </div>
+            <p
+                id="vehicle-blockchain-status"
+                role="status"
+                aria-live="polite"
+            ></p>
         </form>
     </section>
 </div>
@@ -398,6 +412,21 @@
                     <strong id="detailVehicleId">-</strong>
                 </div>
                 <div class="vehicle-detail-item">
+                    <span>Wallet Pemilik</span>
+                    <strong
+                        id="detailVehicleOwnerWallet"
+                        style="word-break: break-all;"
+                    >-</strong>
+                </div>
+                <div class="vehicle-detail-item">
+                    <span>Nama Owner</span>
+                    <strong id="detailVehicleOwnerName">-</strong>
+                </div>
+                <div class="vehicle-detail-item">
+                    <span>ID Owner</span>
+                    <strong id="detailVehicleOwnerId">-</strong>
+                </div>
+                <div class="vehicle-detail-item">
                     <span>Jenis Kendaraan</span>
                     <strong id="detailVehicleType">-</strong>
                 </div>
@@ -433,7 +462,22 @@
         </div>
 
         <div class="vehicle-modal-footer">
-            <button type="button" class="vehicle-cancel-button" id="closeVehicleDetailFooter">Tutup</button>
+            <button
+                type="button"
+                class="vehicle-transfer-button"
+                id="transferVehicleButton"
+            >
+                <i class="bi bi-arrow-left-right"></i>
+                Transfer Kepemilikan
+            </button>
+
+            <button
+                type="button"
+                class="vehicle-cancel-button"
+                id="closeVehicleDetailFooter"
+            >
+                Tutup
+            </button>
         </div>
     </section>
 </div>
@@ -491,101 +535,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    form.addEventListener('submit', function () {
-        saveButton.disabled = true;
-        saveButton.innerHTML =
-            '<span class="vehicle-spinner"></span> Menyimpan...';
-    });
-
     @if ($errors->any())
         openModal();
     @endif
-});
-</script>
-
-{{-- detail --}}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('vehicleDetailModal');
-
-    if (!modal) return;
-
-    const closeButtons = [
-        document.getElementById('closeVehicleDetail'),
-        document.getElementById('closeVehicleDetailFooter')
-    ];
-
-    const fields = {
-        vehicleId: 'detailVehicleId',
-        brand: 'detailVehicleBrand',
-        model: 'detailVehicleModel',
-        type: 'detailVehicleType',
-        year: 'detailVehicleYear',
-        plate: 'detailVehiclePlate',
-        color: 'detailVehicleColor',
-        vin: 'detailVehicleVin',
-        registered: 'detailVehicleRegistered'
-    };
-
-    function setText(id, value) {
-        document.getElementById(id).textContent = value || '-';
-    }
-
-    function openDetail(button) {
-        Object.entries(fields).forEach(([key, id]) => {
-            setText(id, button.dataset[key]);
-        });
-
-        setText(
-            'detailVehicleName',
-            `${button.dataset.brand} ${button.dataset.model}`
-        );
-
-        setText(
-            'detailVehicleSubtitle',
-            `${button.dataset.type} · Tahun ${button.dataset.year}`
-        );
-
-        const status = document.getElementById('detailVehicleStatus');
-        const active = button.dataset.status === 'ACTIVE';
-
-        status.className = `vehicle-status ${active ? 'active' : 'inactive'}`;
-        status.innerHTML = `<i class="bi bi-circle-fill"></i> ${active ? 'Aktif' : 'Tidak aktif'}`;
-
-        document.getElementById('detailVehicleIcon').innerHTML =
-            button.dataset.type.toLowerCase() === 'motor'
-                ? '<i class="bi bi-scooter"></i>'
-                : '<i class="bi bi-car-front"></i>';
-
-        modal.classList.add('is-open');
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('vehicle-modal-open');
-    }
-
-    function closeDetail() {
-        modal.classList.remove('is-open');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('vehicle-modal-open');
-    }
-
-    document.querySelectorAll('.vehicle-detail-button[data-vehicle-id]')
-        .forEach(button => {
-            button.addEventListener('click', () => openDetail(button));
-        });
-
-    closeButtons.filter(Boolean).forEach(button => {
-        button.addEventListener('click', closeDetail);
-    });
-
-    modal.addEventListener('click', function (event) {
-        if (event.target === modal) closeDetail();
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-            closeDetail();
-        }
-    });
 });
 </script>
 @endsection

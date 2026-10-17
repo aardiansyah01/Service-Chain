@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use App\Models\Workshop;
 use App\Models\Service;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\Workshop;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -22,6 +23,7 @@ class AdminController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('wallet_address', 'like', "%{$search}%")
                     ->orWhereHas('workshop', function ($workshopQuery) use ($search) {
                         $workshopQuery->where(
                             'wallet_address',
@@ -38,19 +40,19 @@ class AdminController extends Controller
 
         switch ($sort) {
             case 'oldest':
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy('created_at');
                 break;
 
             case 'name-asc':
-                $query->orderBy('name', 'asc');
+                $query->orderBy('name');
                 break;
 
             case 'name-desc':
-                $query->orderBy('name', 'desc');
+                $query->orderByDesc('name');
                 break;
 
             default:
-                $query->orderBy('created_at', 'desc');
+                $query->orderByDesc('created_at');
                 break;
         }
 
@@ -79,14 +81,11 @@ class AdminController extends Controller
             ->with('success', 'Akun pengguna berhasil dinonaktifkan.');
     }
 
-    // Workshop
     public function workshops(Request $request)
     {
         $workshops = Workshop::with('user')
             ->orderByDesc('created_at')
             ->get();
-
-        $pendingWorkshopCount = Workshop::where('status', 'PENDING')->count();
 
         return view('admin.workshops', compact('workshops'));
     }
@@ -94,7 +93,10 @@ class AdminController extends Controller
     public function approveWorkshop(Workshop $workshop)
     {
         if ($workshop->status !== 'PENDING') {
-            return back()->with('error', 'Pengajuan bengkel ini sudah diproses.');
+            return back()->with(
+                'error',
+                'Pengajuan bengkel ini sudah diproses.'
+            );
         }
 
         $workshop->update([
@@ -109,7 +111,10 @@ class AdminController extends Controller
     public function rejectWorkshop(Workshop $workshop)
     {
         if ($workshop->status !== 'PENDING') {
-            return back()->with('error', 'Pengajuan bengkel ini sudah diproses.');
+            return back()->with(
+                'error',
+                'Pengajuan bengkel ini sudah diproses.'
+            );
         }
 
         $workshop->update([
@@ -124,7 +129,10 @@ class AdminController extends Controller
     public function deactivateWorkshop(Workshop $workshop)
     {
         if ($workshop->status !== 'ACTIVE') {
-            return back()->with('error', 'Hanya bengkel aktif yang dapat dinonaktifkan.');
+            return back()->with(
+                'error',
+                'Hanya bengkel aktif yang dapat dinonaktifkan.'
+            );
         }
 
         $workshop->update([
@@ -145,6 +153,7 @@ class AdminController extends Controller
         $query = Service::with([
             'vehicle.owner',
             'workshop',
+            'owner',
         ]);
 
         if ($search !== '') {
@@ -154,12 +163,24 @@ class AdminController extends Controller
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhere('workshop_name', 'like', "%{$search}%")
                     ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
-                        $vehicleQuery->where('vehicle_id', 'like', "%{$search}%")
+                        $vehicleQuery
+                            ->where('vehicle_id', 'like', "%{$search}%")
                             ->orWhere('brand', 'like', "%{$search}%")
                             ->orWhere('model', 'like', "%{$search}%")
                             ->orWhereHas('owner', function ($ownerQuery) use ($search) {
-                                $ownerQuery->where('name', 'like', "%{$search}%");
+                                $ownerQuery->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                );
                             });
+                    })
+                    ->orWhereHas('owner', function ($ownerQuery) use ($search) {
+                        $ownerQuery->where(
+                            'name',
+                            'like',
+                            "%{$search}%"
+                        );
                     });
             });
         }
@@ -170,21 +191,31 @@ class AdminController extends Controller
 
         switch ($sort) {
             case 'oldest':
-                $query->orderBy('service_date', 'asc');
+                $query->orderBy('service_date');
                 break;
 
             case 'name-asc':
-                $query->join('vehicles', 'services.vehicle_id', '=', 'vehicles.id')
+                $query->join(
+                    'vehicles',
+                    'service_records.vehicle_id',
+                    '=',
+                    'vehicles.vehicle_id'
+                )
                     ->orderBy('vehicles.brand')
                     ->orderBy('vehicles.model')
-                    ->select('services.*');
+                    ->select('service_records.*');
                 break;
 
             case 'name-desc':
-                $query->join('vehicles', 'services.vehicle_id', '=', 'vehicles.id')
+                $query->join(
+                    'vehicles',
+                    'service_records.vehicle_id',
+                    '=',
+                    'vehicles.vehicle_id'
+                )
                     ->orderByDesc('vehicles.brand')
                     ->orderByDesc('vehicles.model')
-                    ->select('services.*');
+                    ->select('service_records.*');
                 break;
 
             default:
@@ -208,13 +239,12 @@ class AdminController extends Controller
             'sort'
         ));
     }
-    
-    // Ringkasan
+
     public function dashboard()
     {
         $totalUsers = User::whereIn('role', ['owner', 'workshop'])->count();
 
-        $totalVehicles = \App\Models\Vehicle::count();
+        $totalVehicles = Vehicle::count();
 
         $activeWorkshops = Workshop::where('status', 'ACTIVE')->count();
 
@@ -226,9 +256,7 @@ class AdminController extends Controller
 
         $pendingWorkshopCount = Workshop::where('status', 'PENDING')->count();
 
-        $totalServices = \Illuminate\Support\Facades\Schema::hasTable('services')
-            ? \Illuminate\Support\Facades\DB::table('services')->count()
-            : 0;
+        $totalServices = Service::count();
 
         $recentActivities = collect();
 

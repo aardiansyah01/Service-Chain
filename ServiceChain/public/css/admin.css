@@ -2637,3 +2637,107 @@ body.workshop-modal-open {
         margin-left: 61px;
     }
 }
+
+.admin-wallet-connect {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    padding: 7px 9px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.admin-wallet-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #16a34a;
+    background: #ecfdf5;
+    border-radius: 8px;
+    font-size: 17px;
+}
+
+.admin-wallet-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 90px;
+}
+
+.admin-wallet-label {
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+}
+
+.admin-wallet-address {
+    color: #334155;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.admin-wallet-button {
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-wallet-button:hover {
+    background: #f8fafc;
+}
+
+.admin-wallet-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admin-wallet-status:not([hidden]) {
+    color: #dc2626;
+    font-size: 10px;
+    max-width: 220px;
+    overflow-wrap: anywhere;
+}
+
+.workshop-approve-btn:disabled {
+    opacity: 0.45;
+    filter: grayscale(0.5);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.break-wallet {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.table-detail-button.service-detail-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+    border-radius: 10px;
+}
+
+.table-detail-button.service-detail-trigger i {
+    font-size: 17px;
+    line-height: 1;
+}
+
+.table-detail-button.service-detail-trigger:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}

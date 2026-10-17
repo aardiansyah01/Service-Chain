@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'ServiceChain Workshop')</title>
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,6 +18,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/owner.css') }}">
     <link rel="stylesheet" href="{{ asset('css/workshop.css') }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 <body class="workshop-body">
 
@@ -69,16 +74,27 @@
                     <i class="bi bi-wallet2"></i>
                 </span>
                 <span class="workshop-wallet-text">
-                    <small>WALLET TERHUBUNG</small>
+                    <small>WALLET BENGKEL</small>
                     <strong id="workshopWalletAddress">Belum terhubung</strong>
                 </span>
-            </div>
+                <button
+                    type="button"
+                    id="connect-workshop-wallet"
+                    class="workshop-wallet-connect-button"
+                    data-check-url="{{ route('workshop.wallet.check') }}"
+                    data-connect-url="{{ route('workshop.wallet.connect') }}"
+                    data-workshop-name="{{ auth()->user()->workshop?->workshop_name ?? '' }}"
+                    data-saved-wallet="{{ auth()->user()->workshop?->wallet_address ?? '' }}"
+                >
+                    Hubungkan Wallet
+                </button>
 
-            <button type="button" class="workshop-icon-button"
-                    aria-label="Notifikasi">
-                <i class="bi bi-bell"></i>
-                <span class="workshop-notification-dot"></span>
-            </button>
+                <p
+                    id="workshopWalletStatus"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+            </div>
 
             @php
                 $workshop = auth()->user()->workshop;

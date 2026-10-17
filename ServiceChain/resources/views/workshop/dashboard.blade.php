@@ -16,7 +16,6 @@
             ->implode('');
     @endphp
 
-    {{-- Header --}}
     <div class="workshop-welcome">
         <div>
             <p class="workshop-business-label">
@@ -37,7 +36,6 @@
         </a>
     </div>
 
-    {{-- Statistik --}}
     <div class="workshop-stats-grid">
 
         <div class="workshop-stat-card">
@@ -97,7 +95,6 @@
 
     </div>
 
-    {{-- Catatan servis terbaru --}}
     <section class="workshop-records-card">
 
         <div class="workshop-records-heading">
@@ -159,9 +156,9 @@
 
                             <td>
                                 <a
-                                    href="{{ route('workshop.records.show', $service) }}"
+                                    href="{{ route('workshop.records.index') }}"
                                     class="workshop-record-detail"
-                                    aria-label="Detail catatan servis"
+                                    aria-label="Lihat catatan servis"
                                 >
                                     <i class="bi bi-chevron-right"></i>
                                 </a>

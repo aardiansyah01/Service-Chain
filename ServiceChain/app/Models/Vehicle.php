@@ -20,6 +20,9 @@ class Vehicle extends Model
         'license_plate',
         'vin',
         'color',
+        'chassis_number',
+        'owner_wallet_address',
+        'sync_status',
         'registered_at',
         'status',
     ];
@@ -39,6 +42,10 @@ class Vehicle extends Model
 
     public function services(): HasMany
     {
-        return $this->hasMany(Service::class);
+        return $this->hasMany(
+            Service::class,
+            'vehicle_id',
+            'vehicle_id'
+        );
     }
 }

@@ -4,21 +4,86 @@
 @section('page-heading', 'Catatan Servis')
 
 @section('content')
+
+@php
+    $currentUser = auth()->user();
+    $currentWorkshop = $currentUser?->workshop;
+
+    $accountActive = strtolower(
+        (string) $currentUser?->status
+    ) === 'active';
+
+    $workshopActive = strtoupper(
+        (string) $currentWorkshop?->status
+    ) === 'ACTIVE';
+
+    $userWallet = strtolower(trim(
+        (string) $currentUser?->wallet_address
+    ));
+
+    $workshopWallet = strtolower(trim(
+        (string) $currentWorkshop?->wallet_address
+    ));
+
+    $walletLinked = $userWallet !== ''
+        && $workshopWallet !== ''
+        && hash_equals($userWallet, $workshopWallet);
+
+    $canCreateService = $accountActive
+        && $workshopActive
+        && $walletLinked;
+@endphp
+
 <div class="workshop-page workshop-records-page">
 
-    {{-- Header --}}
     <div class="workshop-page-heading">
         <div>
             <h2>Riwayat dan catatan terverifikasi</h2>
             <p>Cari, filter, dan tinjau catatan servis bengkel Anda.</p>
         </div>
 
-        <button type="button" class="workshop-primary-button"
-                id="openAddServiceModal">
-            <i class="bi bi-plus-lg"></i>
-            Tambah Catatan
-        </button>
+        @if ($canCreateService)
+            <button
+                type="button"
+                class="workshop-primary-button"
+                id="openAddServiceModal"
+            >
+                <i class="bi bi-plus-lg"></i>
+                Tambah Catatan
+            </button>
+        @else
+            <button
+                type="button"
+                class="workshop-primary-button"
+                disabled
+                aria-disabled="true"
+                title="Hubungkan wallet bengkel terlebih dahulu"
+            >
+                <i class="bi bi-lock"></i>
+                Tambah Catatan
+            </button>
+        @endif
     </div>
+
+    @if (!$canCreateService)
+        <div class="workshop-record-alert error" role="alert">
+            <i class="bi bi-exclamation-circle"></i>
+
+            <div>
+                <strong>Fitur pencatatan servis belum tersedia.</strong>
+
+                <p>
+                    @if (!$accountActive || !$workshopActive)
+                        Akun bengkel harus berstatus aktif terlebih dahulu.
+                    @else
+                        Hubungkan wallet bengkel melalui tombol
+                        "Hubungkan Wallet" di bagian atas halaman
+                        untuk membuka fitur pencatatan servis.
+                    @endif
+                </p>
+            </div>
+        </div>
+    @endif
 
     {{-- Filter --}}
     <form action="{{ route('workshop.records.index') }}"
@@ -94,25 +159,30 @@
 
                 <tbody>
                     @forelse ($services as $service)
-                        <tr>
+                        <tr
+                            class="workshop-service-row"
+                            data-service-id="{{ $service->service_id }}"
+                        >
                             <td>
-                                <div class="workshop-vehicle-name">
-                                    {{ $service->vehicle->brand ?? '-' }}
-                                    {{ $service->vehicle->model ?? '' }}
+                                <div class="workshop-vehicle-name js-chain-vehicle">
+                                    Memuat blockchain...
                                 </div>
-                                <small class="workshop-vehicle-id">
-                                    {{ $service->vehicle->vehicle_id ?? '-' }}
+
+                                <small class="workshop-vehicle-id js-chain-vehicle-id">
+                                    Memuat...
                                 </small>
                             </td>
 
-                            <td>{{ $service->service_type }}</td>
-
                             <td>
-                                {{ $service->service_date->translatedFormat('d F Y') }}
+                                <span class="js-chain-service-type">Memuat...</span>
                             </td>
 
                             <td>
-                                {{ number_format($service->mileage, 0, ',', '.') }} km
+                                <span class="js-chain-service-date">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-mileage">Memuat...</span>
                             </td>
 
                             <td>
@@ -123,20 +193,17 @@
                             </td>
 
                             <td>
-                                <button type="button"
+                                <button
+                                    type="button"
                                     class="workshop-record-detail open-service-detail"
                                     aria-label="Detail servis"
                                     data-service-id="{{ $service->service_id }}"
-                                    data-vehicle="{{ ($service->vehicle->brand ?? '-') . ' ' . ($service->vehicle->model ?? '') }}"
-                                    data-vehicle-id="{{ $service->vehicle->vehicle_id ?? '-' }}"
-                                    data-owner="{{ $service->vehicle->owner->name ?? '-' }}"
-                                    data-type="{{ $service->service_type }}"
-                                    data-date="{{ $service->service_date->translatedFormat('d F Y') }}"
-                                    data-mileage="{{ number_format($service->mileage, 0, ',', '.') }} km"
-                                    data-cost="Rp {{ number_format((float) $service->cost, 0, ',', '.') }}"
-                                    data-workshop="{{ $service->workshop_name }}"
-                                    data-address="{{ $service->workshop_address }}"
-                                    data-description="{{ $service->description }}">
+                                    data-owner-name="{{ $service->owner?->name ?? '-' }}"
+                                    data-owner-id="{{ $service->owner_id ?? '' }}"
+                                    data-workshop-name="{{ $service->workshop_name ?? '-' }}"
+                                    data-workshop-address="{{ $service->workshop_address ?? '-' }}"
+                                    data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
+                                >
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </td>
@@ -163,6 +230,7 @@
 </div>
 
 {{-- MODAL TAMBAH CATATAN --}}
+@if ($canCreateService)
 <div class="workshop-modal-overlay" id="addServiceModal"
      aria-hidden="true">
     <section class="workshop-modal" role="dialog"
@@ -180,9 +248,20 @@
             </button>
         </div>
 
-        <form action="{{ route('workshop.records.store') }}"
-              method="POST" id="addServiceForm">
+        <form
+            action="{{ route('workshop.records.store') }}"
+            method="POST"
+            enctype="multipart/form-data"
+            id="addServiceForm"
+            data-prepare-url="{{ route('workshop.records.prepare') }}"
+            data-workshop-wallet="{{ auth()->user()->workshop?->wallet_address ?? '' }}"
+        >
             @csrf
+
+            <input type="hidden" name="service_id">
+            <input type="hidden" name="wallet_address">
+            <input type="hidden" name="transaction_hash">
+            <input type="hidden" name="receipt_hash">
 
             <div class="workshop-modal-body">
                 <div class="workshop-form-grid">
@@ -337,7 +416,7 @@
                             id="serviceCost"
                             value="{{ old('cost') }}"
                             min="0"
-                            step="0.01"
+                            step="1"
                             required
                             placeholder="Contoh: 500000"
                         >
@@ -362,6 +441,32 @@
                             <small class="workshop-field-error">{{ $message }}</small>
                         @enderror
                     </div>
+
+                    <div class="workshop-form-field workshop-form-full">
+                        <label for="serviceReceipt">Bukti Nota Servis <span>*</span></label>
+
+                        <input
+                            type="file"
+                            name="receipt"
+                            id="serviceReceipt"
+                            accept="image/*"
+                            required
+                        >
+
+                        @error('receipt')
+                            <small class="workshop-field-error">{{ $message }}</small>
+                        @enderror
+
+                        <small class="workshop-field-hint">
+                            Unggah foto nota servis. Maksimal 10 MB.
+                        </small>
+                    </div>
+
+                    <p
+                        id="serviceBlockchainStatus"
+                        role="status"
+                        aria-live="polite"
+                    ></p>
                 </div>
 
                 <p class="workshop-form-note">
@@ -381,6 +486,7 @@
         </form>
     </section>
 </div>
+@endif
 
 {{-- MODAL DETAIL CATATAN --}}
 <div class="workshop-modal-overlay" id="serviceDetailModal"
@@ -403,23 +509,8 @@
         <div class="workshop-modal-body">
             <div class="workshop-detail-grid">
                 <div class="workshop-detail-field">
-                    <span>Kendaraan</span>
-                    <strong id="detailVehicle">-</strong>
-                </div>
-
-                <div class="workshop-detail-field">
-                    <span>ID Kendaraan</span>
-                    <strong id="detailVehicleId">-</strong>
-                </div>
-
-                <div class="workshop-detail-field">
-                    <span>Nama Pemilik</span>
-                    <strong id="detailOwner">-</strong>
-                </div>
-
-                <div class="workshop-detail-field">
-                    <span>Jenis Servis</span>
-                    <strong id="detailType">-</strong>
+                    <span>ID Servis (serviceId)</span>
+                    <strong id="detailServiceIdField">-</strong>
                 </div>
 
                 <div class="workshop-detail-field">
@@ -428,13 +519,18 @@
                 </div>
 
                 <div class="workshop-detail-field">
-                    <span>Kilometer</span>
-                    <strong id="detailMileage">-</strong>
+                    <span>Jenis Servis</span>
+                    <strong id="detailType">-</strong>
                 </div>
 
                 <div class="workshop-detail-field">
-                    <span>Harga Servis</span>
+                    <span>Biaya Servis</span>
                     <strong id="detailCost">-</strong>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>Kilometer</span>
+                    <strong id="detailMileage">-</strong>
                 </div>
 
                 <div class="workshop-detail-field">
@@ -444,12 +540,71 @@
 
                 <div class="workshop-detail-field workshop-detail-full">
                     <span>Alamat Bengkel</span>
-                    <strong id="detailAddress">-</strong>
+                    <p id="detailAddress">-</p>
                 </div>
 
                 <div class="workshop-detail-field workshop-detail-full">
-                    <span>Deskripsi Detail Servis</span>
+                    <span>Wallet Bengkel</span>
+                    <strong id="detailWorkshopWallet" class="break-wallet">-</strong>
+                </div>
+
+                <div class="workshop-detail-field workshop-detail-full">
+                    <span>Detail Servis</span>
                     <p id="detailDescription">-</p>
+                </div>
+
+                <div class="workshop-detail-field workshop-detail-full">
+                    <span>Nilai Hash (serviceHash)</span>
+                    <strong id="detailServiceHash" class="break-wallet">-</strong>
+                </div>
+
+                <div class="workshop-detail-field workshop-detail-full">
+                    <span>Bukti Nota</span>
+
+                    <a
+                        id="detailReceiptLink"
+                        href="#"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        hidden
+                    >
+                        <i class="bi bi-file-earmark-image"></i>
+                        Lihat bukti nota
+                    </a>
+
+                    <span id="detailReceiptUnavailable">
+                        Bukti nota tidak tersedia
+                    </span>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>ID Kendaraan (vehicleId)</span>
+                    <strong id="detailVehicleId">-</strong>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>Kendaraan</span>
+                    <strong id="detailVehicle">-</strong>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>Nama Owner</span>
+                    <strong id="detailOwner">-</strong>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>ID Owner (ownerId)</span>
+                    <strong id="detailOwnerId">-</strong>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>Warna Kendaraan</span>
+                    <strong id="detailVehicleColor">-</strong>
+                </div>
+
+                <div class="workshop-detail-field">
+                    <span>Tahun Kendaraan</span>
+                    <strong id="detailVehicleYear">-</strong>
                 </div>
             </div>
         </div>
@@ -465,6 +620,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const addButton = document.getElementById('openAddServiceModal');
     const addModal = document.getElementById('addServiceModal');
     const detailModal = document.getElementById('serviceDetailModal');
 
@@ -477,6 +633,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const vehicleIdInput = document.getElementById('serviceVehicleId');
     const ownerInput = document.getElementById('serviceOwner');
     const selectedLabel = document.getElementById('serviceSelectedVehicle');
+
+    const options = results
+        ? Array.from(results.querySelectorAll('.workshop-vehicle-option'))
+        : [];
 
     function openModal(modal) {
         if (!modal) return;
@@ -497,17 +657,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    document.getElementById('openAddServiceModal')
-        ?.addEventListener('click', function () {
-            openModal(addModal);
-        });
+    // Modal tambah catatan
+    addButton?.addEventListener('click', function (event) {
+        event.preventDefault();
+        openModal(addModal);
+    });
 
+    // Tutup modal
     document.querySelectorAll('[data-close-modal]').forEach(button => {
         button.addEventListener('click', function () {
             closeModal(button.closest('.workshop-modal-overlay'));
         });
     });
 
+    // Tutup modal ketika area luar diklik
     document.querySelectorAll('.workshop-modal-overlay').forEach(modal => {
         modal.addEventListener('click', function (event) {
             if (event.target === modal) {
@@ -516,25 +679,35 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Tutup modal dengan tombol Escape
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             document.querySelectorAll('.workshop-modal-overlay.show')
-                .forEach(modal => closeModal(modal));
+                .forEach(closeModal);
         }
     });
 
-    if (searchInput && results && vehicleInput) {
-        const options = Array.from(
-            results.querySelectorAll('.workshop-vehicle-option')
-        );
-
+    // Pemilihan dan pencarian kendaraan
+    if (
+        searchInput &&
+        results &&
+        vehicleInput &&
+        vehicleNameInput &&
+        vehicleIdInput &&
+        ownerInput &&
+        selectedLabel
+    ) {
         function selectVehicle(option) {
-            vehicleInput.value = option.dataset.id || '';
+            const vehicleId = option.dataset.vehicleId || '';
+
+            // Gunakan vehicle_id blockchain/string,
+            // bukan ID numerik primary key MySQL.
+            vehicleInput.value = vehicleId;
 
             vehicleNameInput.value =
                 `${option.dataset.brand || ''} ${option.dataset.model || ''}`.trim();
 
-            vehicleIdInput.value = option.dataset.vehicleId || '';
+            vehicleIdInput.value = vehicleId;
             ownerInput.value = option.dataset.owner || '-';
 
             selectedLabel.textContent =
@@ -546,19 +719,19 @@ document.addEventListener('DOMContentLoaded', function () {
             results.hidden = true;
         }
 
-        function filterVehicles() {
+        function filterVehicles(clearSelection = false) {
             const keyword = searchInput.value.toLowerCase().trim();
             let visibleCount = 0;
 
             options.forEach(option => {
-                const text = [
+                const searchableText = [
                     option.dataset.brand,
                     option.dataset.model,
                     option.dataset.vehicleId,
                     option.dataset.owner
                 ].join(' ').toLowerCase();
 
-                const matches = text.includes(keyword);
+                const matches = searchableText.includes(keyword);
 
                 option.hidden = !matches;
 
@@ -571,17 +744,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
             results.hidden = false;
 
-            vehicleInput.value = '';
-            vehicleNameInput.value = '';
-            vehicleIdInput.value = '';
-            ownerInput.value = '';
-            selectedLabel.textContent = 'Pilih kendaraan dari hasil pencarian.';
+            // Pilihan direset hanya ketika isi pencarian berubah,
+            // bukan setiap kali kolom mendapatkan fokus.
+            if (clearSelection) {
+                vehicleInput.value = '';
+                vehicleNameInput.value = '';
+                vehicleIdInput.value = '';
+                ownerInput.value = '';
+
+                selectedLabel.textContent =
+                    'Pilih kendaraan dari hasil pencarian.';
+            }
         }
 
-        searchInput.addEventListener('input', filterVehicles);
+        searchInput.addEventListener('input', function () {
+            filterVehicles(true);
+        });
 
         searchInput.addEventListener('focus', function () {
-            filterVehicles();
+            filterVehicles(false);
         });
 
         options.forEach(option => {
@@ -599,11 +780,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // Pulihkan pilihan kendaraan setelah validasi gagal.
         const oldVehicleId = vehicleInput.value;
 
         if (oldVehicleId) {
-            const oldOption = options.find(
-                option => option.dataset.id === oldVehicleId
+            const oldOption = options.find(option =>
+                option.dataset.vehicleId === oldVehicleId
             );
 
             if (oldOption) {
@@ -611,47 +793,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-
-    document.querySelectorAll('.open-service-detail').forEach(button => {
-        button.addEventListener('click', function () {
-            const data = button.dataset;
-
-            document.getElementById('detailServiceId').textContent =
-                'ID Catatan: ' + (data.serviceId || '-');
-
-            document.getElementById('detailVehicle').textContent =
-                data.vehicle || '-';
-
-            document.getElementById('detailVehicleId').textContent =
-                data.vehicleId || '-';
-
-            document.getElementById('detailOwner').textContent =
-                data.owner || '-';
-
-            document.getElementById('detailType').textContent =
-                data.type || '-';
-
-            document.getElementById('detailDate').textContent =
-                data.date || '-';
-
-            document.getElementById('detailMileage').textContent =
-                data.mileage || '-';
-
-            document.getElementById('detailCost').textContent =
-                data.cost || '-';
-
-            document.getElementById('detailWorkshop').textContent =
-                data.workshop || '-';
-
-            document.getElementById('detailAddress').textContent =
-                data.address || '-';
-
-            document.getElementById('detailDescription').textContent =
-                data.description || '-';
-
-            openModal(detailModal);
-        });
-    });
 
     @if ($errors->any())
         openModal(addModal);

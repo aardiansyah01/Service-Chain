@@ -1,4 +1,4 @@
- // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.34;
 
 contract ServiceChain {
@@ -25,6 +25,8 @@ contract ServiceChain {
         string licensePlate;
         bool active;
         bool registered;
+        string color;
+        uint256 year;
     }
 
     struct ServiceRecord {
@@ -36,6 +38,7 @@ contract ServiceChain {
         uint256 cost;
         string serviceType;
         string description;
+        bytes32 serviceHash;
         bool exists;
         bool cancelled;
     }
@@ -47,15 +50,19 @@ contract ServiceChain {
 
     uint256 public nextServiceId = 1;
 
-    event WorkshopRegistered(address indexed wallet, string name);
+    event WorkshopRegistered(
+        address indexed wallet,
+        string name
+    );
+
     event WorkshopStatusChanged(
         address indexed wallet,
         WorkshopStatus status
     );
 
     event VehicleRegistered(
-        string indexed vehicleId,
-        address indexed owner
+        string vehicleId,
+        address owner
     );
 
     event VehicleUpdated(string indexed vehicleId);
@@ -83,7 +90,7 @@ contract ServiceChain {
     modifier onlyWorkshop() {
         require(
             workshops[msg.sender].registered &&
-            workshops[msg.sender].status == WorkshopStatus.ACTIVE,
+                workshops[msg.sender].status == WorkshopStatus.ACTIVE,
             "Workshop is not active"
         );
         _;
@@ -92,7 +99,7 @@ contract ServiceChain {
     modifier onlyVehicleOwner(string memory vehicleId) {
         require(
             vehicles[vehicleId].registered &&
-            vehicles[vehicleId].owner == msg.sender,
+                vehicles[vehicleId].owner == msg.sender,
             "Only vehicle owner"
         );
         _;
@@ -102,11 +109,18 @@ contract ServiceChain {
         admin = msg.sender;
     }
 
+    // =========================================
     // WORKSHOP
+    // =========================================
 
-    function registerWorkshop(string calldata name) external {
+    function registerWorkshop(
+        string calldata name
+    ) external {
         require(bytes(name).length > 0, "Name required");
-        require(!workshops[msg.sender].registered, "Already registered");
+        require(
+            !workshops[msg.sender].registered,
+            "Already registered"
+        );
 
         workshops[msg.sender] = Workshop({
             name: name,
@@ -121,8 +135,13 @@ contract ServiceChain {
         );
     }
 
-    function approveWorkshop(address wallet) external onlyAdmin {
-        require(workshops[wallet].registered, "Workshop not found");
+    function approveWorkshop(
+        address wallet
+    ) external onlyAdmin {
+        require(
+            workshops[wallet].registered,
+            "Workshop not found"
+        );
 
         workshops[wallet].status = WorkshopStatus.ACTIVE;
 
@@ -132,8 +151,13 @@ contract ServiceChain {
         );
     }
 
-    function rejectWorkshop(address wallet) external onlyAdmin {
-        require(workshops[wallet].registered, "Workshop not found");
+    function rejectWorkshop(
+        address wallet
+    ) external onlyAdmin {
+        require(
+            workshops[wallet].registered,
+            "Workshop not found"
+        );
 
         workshops[wallet].status = WorkshopStatus.REJECTED;
 
@@ -143,8 +167,13 @@ contract ServiceChain {
         );
     }
 
-    function deactivateWorkshop(address wallet) external onlyAdmin {
-        require(workshops[wallet].registered, "Workshop not found");
+    function deactivateWorkshop(
+        address wallet
+    ) external onlyAdmin {
+        require(
+            workshops[wallet].registered,
+            "Workshop not found"
+        );
 
         workshops[wallet].status = WorkshopStatus.INACTIVE;
 
@@ -154,17 +183,30 @@ contract ServiceChain {
         );
     }
 
+    // =========================================
     // VEHICLE
+    // =========================================
 
     function registerVehicle(
         string calldata vehicleId,
         string calldata brand,
         string calldata model,
-        string calldata licensePlate
+        string calldata licensePlate,
+        string calldata color,
+        uint256 vehicleYear
     ) external {
-        require(bytes(vehicleId).length > 0, "Vehicle ID required");
+        require(
+            bytes(vehicleId).length > 0,
+            "Vehicle ID required"
+        );
         require(bytes(brand).length > 0, "Brand required");
         require(bytes(model).length > 0, "Model required");
+        require(
+            bytes(licensePlate).length > 0,
+            "License plate required"
+        );
+        require(bytes(color).length > 0, "Color required");
+        require(vehicleYear > 0, "Year required");
         require(
             !vehicles[vehicleId].registered,
             "Vehicle already registered"
@@ -177,7 +219,9 @@ contract ServiceChain {
             model: model,
             licensePlate: licensePlate,
             active: true,
-            registered: true
+            registered: true,
+            color: color,
+            year: vehicleYear
         });
 
         emit VehicleRegistered(vehicleId, msg.sender);
@@ -187,13 +231,28 @@ contract ServiceChain {
         string calldata vehicleId,
         string calldata brand,
         string calldata model,
-        string calldata licensePlate
+        string calldata licensePlate,
+        string calldata color,
+        uint256 vehicleYear
     ) external onlyVehicleOwner(vehicleId) {
-        require(vehicles[vehicleId].active, "Vehicle inactive");
+        require(
+            vehicles[vehicleId].active,
+            "Vehicle inactive"
+        );
+        require(bytes(brand).length > 0, "Brand required");
+        require(bytes(model).length > 0, "Model required");
+        require(
+            bytes(licensePlate).length > 0,
+            "License plate required"
+        );
+        require(bytes(color).length > 0, "Color required");
+        require(vehicleYear > 0, "Year required");
 
         vehicles[vehicleId].brand = brand;
         vehicles[vehicleId].model = model;
         vehicles[vehicleId].licensePlate = licensePlate;
+        vehicles[vehicleId].color = color;
+        vehicles[vehicleId].year = vehicleYear;
 
         emit VehicleUpdated(vehicleId);
     }
@@ -201,7 +260,10 @@ contract ServiceChain {
     function deactivateVehicle(
         string calldata vehicleId
     ) external onlyVehicleOwner(vehicleId) {
-        require(vehicles[vehicleId].active, "Vehicle inactive");
+        require(
+            vehicles[vehicleId].active,
+            "Vehicle inactive"
+        );
 
         vehicles[vehicleId].active = false;
 
@@ -212,9 +274,18 @@ contract ServiceChain {
         string calldata vehicleId,
         address newOwner
     ) external onlyVehicleOwner(vehicleId) {
-        require(vehicles[vehicleId].active, "Vehicle inactive");
-        require(newOwner != address(0), "Invalid new owner");
-        require(newOwner != msg.sender, "Already the owner");
+        require(
+            vehicles[vehicleId].active,
+            "Vehicle inactive"
+        );
+        require(
+            newOwner != address(0),
+            "Invalid new owner"
+        );
+        require(
+            newOwner != msg.sender,
+            "Already the owner"
+        );
 
         address previousOwner = msg.sender;
         vehicles[vehicleId].owner = newOwner;
@@ -229,11 +300,17 @@ contract ServiceChain {
     function getVehicle(
         string calldata vehicleId
     ) external view returns (Vehicle memory) {
-        require(vehicles[vehicleId].registered, "Vehicle not found");
+        require(
+            vehicles[vehicleId].registered,
+            "Vehicle not found"
+        );
+
         return vehicles[vehicleId];
     }
 
+    // =========================================
     // SERVICE RECORDS
+    // =========================================
 
     function addServiceRecord(
         string calldata vehicleId,
@@ -241,14 +318,44 @@ contract ServiceChain {
         uint256 mileage,
         uint256 cost,
         string calldata serviceType,
-        string calldata description
+        string calldata description,
+        bytes32 receiptHash
     ) external onlyWorkshop returns (uint256) {
-        require(vehicles[vehicleId].registered, "Vehicle not found");
-        require(vehicles[vehicleId].active, "Vehicle inactive");
-        require(serviceDate <= block.timestamp, "Invalid service date");
-        require(bytes(serviceType).length > 0, "Service type required");
+        require(
+            vehicles[vehicleId].registered,
+            "Vehicle not found"
+        );
+        require(
+            vehicles[vehicleId].active,
+            "Vehicle inactive"
+        );
+        require(
+            serviceDate <= block.timestamp,
+            "Invalid service date"
+        );
+        require(
+            bytes(serviceType).length > 0,
+            "Service type required"
+        );
+        require(
+            receiptHash != bytes32(0),
+            "Receipt hash required"
+        );
 
         uint256 serviceId = nextServiceId++;
+
+        bytes32 serviceHash = keccak256(
+            abi.encode(
+                vehicleId,
+                msg.sender,
+                serviceDate,
+                mileage,
+                cost,
+                serviceType,
+                description,
+                receiptHash
+            )
+        );
 
         serviceRecords[serviceId] = ServiceRecord({
             serviceId: serviceId,
@@ -259,6 +366,7 @@ contract ServiceChain {
             cost: cost,
             serviceType: serviceType,
             description: description,
+            serviceHash: serviceHash,
             exists: true,
             cancelled: false
         });
@@ -282,7 +390,8 @@ contract ServiceChain {
         require(record.exists, "Record not found");
         require(!record.cancelled, "Already cancelled");
         require(
-            msg.sender == record.workshop || msg.sender == admin,
+            msg.sender == record.workshop ||
+                msg.sender == admin,
             "Not authorized"
         );
 
@@ -305,7 +414,11 @@ contract ServiceChain {
     function getVehicleServiceHistory(
         string calldata vehicleId
     ) external view returns (uint256[] memory) {
-        require(vehicles[vehicleId].registered, "Vehicle not found");
+        require(
+            vehicles[vehicleId].registered,
+            "Vehicle not found"
+        );
+
         return vehicleServiceHistory[vehicleId];
     }
 }

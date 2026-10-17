@@ -246,7 +246,12 @@
 
             <form method="POST" id="approveWorkshopForm">
                 @csrf
-                <button type="submit" class="workshop-approve-btn">
+                <button
+                    type="submit"
+                    id="approveWorkshopButton"
+                    class="workshop-approve-btn"
+                    disabled
+                >
                     <i class="bi bi-check-lg"></i> Setujui Bengkel
                 </button>
             </form>
@@ -361,6 +366,14 @@ document.addEventListener('DOMContentLoaded', function () {
         approveForm.hidden = !isPending;
         rejectForm.hidden = !isPending;
 
+        const approveButton = document.getElementById('approveWorkshopButton');
+
+        if (approveButton) {
+            approveButton.disabled =
+                !isPending ||
+                window.serviceChainAdminWalletValid !== true;
+        }
+
         modalActions.classList.toggle('pending-actions', isPending);
         modal.hidden = false;
         document.body.classList.add('workshop-modal-open');
@@ -388,12 +401,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 event.preventDefault();
             }
         });
-    });
-
-    approveForm.addEventListener('submit', function (event) {
-        if (!window.confirm('Setujui pengajuan bengkel ini?')) {
-            event.preventDefault();
-        }
     });
 
     rejectForm.addEventListener('submit', function (event) {

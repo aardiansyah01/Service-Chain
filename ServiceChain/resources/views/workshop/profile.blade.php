@@ -18,7 +18,6 @@
         </button>
     </div>
 
-    {{-- Notifikasi --}}
     @if (session('success'))
         <div class="workshop-record-alert success">
             <i class="bi bi-check-circle"></i>
@@ -58,7 +57,6 @@
 
     <div class="workshop-profile-layout">
 
-        {{-- Ringkasan profil --}}
         <section class="workshop-profile-summary">
             <div class="workshop-profile-avatar">
                 {{ $initials ?: 'B' }}
@@ -76,7 +74,6 @@
             </span>
         </section>
 
-        {{-- Informasi akun --}}
         <section class="workshop-profile-settings">
 
             <form id="workshopProfileForm"

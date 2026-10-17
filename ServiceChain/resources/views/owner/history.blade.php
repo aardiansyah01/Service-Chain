@@ -68,19 +68,35 @@
 
                 <tbody id="historyTableBody">
                     @forelse ($services as $service)
-                        <tr>
+                        <tr
+                            class="js-service-row"
+                            data-service-id="{{ $service->service_id }}"
+                        >
                             <td>
-                                <div class="history-vehicle-name">
-                                    {{ $service->vehicle->brand }} {{ $service->vehicle->model }}
+                                <div class="history-vehicle-name js-chain-vehicle">
+                                    Memuat data blockchain...
                                 </div>
-                                <span class="history-vehicle-id">
-                                    {{ $service->vehicle->vehicle_id }}
+
+                                <span class="history-vehicle-id js-chain-vehicle-id">
+                                    Memuat...
                                 </span>
                             </td>
-                            <td>{{ $service->service_type }}</td>
-                            <td>{{ $service->service_date->translatedFormat('d F Y') }}</td>
-                            <td>{{ number_format($service->mileage, 0, ',', '.') }} km</td>
-                            <td>Rp{{ number_format((float) $service->cost, 0, ',', '.') }}</td>
+
+                            <td>
+                                <span class="js-chain-service-type">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-service-date">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-mileage">Memuat...</span>
+                            </td>
+
+                            <td>
+                                <span class="js-chain-cost">Memuat...</span>
+                            </td>
                             <td>
                                 <button
                                     type="button"
@@ -89,6 +105,8 @@
                                     data-service-id="{{ $service->service_id }}"
                                     data-vehicle="{{ $service->vehicle->brand }} {{ $service->vehicle->model }}"
                                     data-vehicle-id="{{ $service->vehicle->vehicle_id }}"
+                                    data-owner-name="{{ $service->owner?->name ?? '-' }}"
+                                    data-owner-id="{{ $service->owner_id ?? '' }}"
                                     data-service-type="{{ $service->service_type }}"
                                     data-date="{{ $service->service_date->translatedFormat('d F Y') }}"
                                     data-mileage="{{ number_format($service->mileage, 0, ',', '.') }} km"
@@ -96,6 +114,7 @@
                                     data-workshop="{{ $service->workshop_name }}"
                                     data-address="{{ $service->workshop_address }}"
                                     data-description="{{ $service->description }}"
+                                    data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
                                 >
                                     <i class="bi bi-chevron-right"></i>
                                 </button>
@@ -155,6 +174,16 @@
                 </div>
 
                 <div class="history-detail-field">
+                    <span>Nama Owner saat Servis</span>
+                    <strong id="detailOwnerName">-</strong>
+                </div>
+
+                <div class="history-detail-field">
+                    <span>ID Owner saat Servis</span>
+                    <strong id="detailOwnerId">-</strong>
+                </div>
+
+                <div class="history-detail-field">
                     <span>Jenis Servis</span>
                     <strong id="detailServiceType">-</strong>
                 </div>
@@ -185,9 +214,41 @@
                 </div>
 
                 <div class="history-detail-field history-detail-wide">
+                    <span>Wallet Bengkel</span>
+                    <strong id="detailWorkshopWallet"
+                            style="word-break: break-all;">-</strong>
+                </div>
+
+                <div class="history-detail-field history-detail-wide">
                     <span>Deskripsi Servis</span>
                     <p id="detailDescription">-</p>
                 </div>
+
+                <div class="history-detail-field history-detail-wide">
+                    <span>Hash Servis (serviceHash)</span>
+                    <strong id="detailServiceHash"
+                            style="word-break: break-all;">-</strong>
+                </div>
+
+                <div class="history-detail-field history-detail-wide">
+                    <span>Bukti Nota</span>
+
+                    <a
+                        id="detailReceiptLink"
+                        href="#"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        hidden
+                    >
+                        <i class="bi bi-file-earmark-image"></i>
+                        Lihat bukti nota
+                    </a>
+
+                    <span id="detailReceiptUnavailable">
+                        Bukti nota tidak tersedia
+                    </span>
+                </div>
+
             </div>
         </div>
 
@@ -196,60 +257,4 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('historyDetailModal');
-    const detailButtons = document.querySelectorAll('.js-history-detail');
-    const closeButtons = modal.querySelectorAll('[data-history-close]');
-
-    const fields = {
-        serviceId: document.getElementById('detailServiceId'),
-        vehicle: document.getElementById('detailVehicle'),
-        vehicleId: document.getElementById('detailVehicleId'),
-        serviceType: document.getElementById('detailServiceType'),
-        date: document.getElementById('detailDate'),
-        mileage: document.getElementById('detailMileage'),
-        cost: document.getElementById('detailCost'),
-        workshop: document.getElementById('detailWorkshop'),
-        address: document.getElementById('detailAddress'),
-        description: document.getElementById('detailDescription')
-    };
-
-    detailButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-            fields.serviceId.textContent = button.dataset.serviceId;
-            fields.vehicle.textContent = button.dataset.vehicle;
-            fields.vehicleId.textContent = button.dataset.vehicleId;
-            fields.serviceType.textContent = button.dataset.serviceType;
-            fields.date.textContent = button.dataset.date;
-            fields.mileage.textContent = button.dataset.mileage;
-            fields.cost.textContent = button.dataset.cost;
-            fields.workshop.textContent = button.dataset.workshop;
-            fields.address.textContent = button.dataset.address;
-            fields.description.textContent = button.dataset.description;
-
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('history-detail-open');
-        });
-    });
-
-    function closeModal() {
-        modal.classList.remove('is-open');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('history-detail-open');
-    }
-
-    closeButtons.forEach(function (button) {
-        button.addEventListener('click', closeModal);
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-            closeModal();
-        }
-    });
-});
-</script>
 @endsection

@@ -1,0 +1,614 @@
+﻿[
+    {
+        "inputs":  [
+
+                   ],
+        "stateMutability":  "nonpayable",
+        "type":  "constructor"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "indexed":  true,
+                           "internalType":  "address",
+                           "name":  "previousOwner",
+                           "type":  "address"
+                       },
+                       {
+                           "indexed":  true,
+                           "internalType":  "address",
+                           "name":  "newOwner",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "OwnershipTransferred",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "uint256",
+                           "name":  "serviceId",
+                           "type":  "uint256"
+                       },
+                       {
+                           "indexed":  true,
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "indexed":  true,
+                           "internalType":  "address",
+                           "name":  "workshop",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "ServiceRecordAdded",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "uint256",
+                           "name":  "serviceId",
+                           "type":  "uint256"
+                       }
+                   ],
+        "name":  "ServiceRecordCancelled",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "VehicleDeactivated",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "indexed":  true,
+                           "internalType":  "address",
+                           "name":  "owner",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "VehicleRegistered",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "VehicleUpdated",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "address",
+                           "name":  "wallet",
+                           "type":  "address"
+                       },
+                       {
+                           "indexed":  false,
+                           "internalType":  "string",
+                           "name":  "name",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "WorkshopRegistered",
+        "type":  "event"
+    },
+    {
+        "anonymous":  false,
+        "inputs":  [
+                       {
+                           "indexed":  true,
+                           "internalType":  "address",
+                           "name":  "wallet",
+                           "type":  "address"
+                       },
+                       {
+                           "indexed":  false,
+                           "internalType":  "enum ServiceChain.WorkshopStatus",
+                           "name":  "status",
+                           "type":  "uint8"
+                       }
+                   ],
+        "name":  "WorkshopStatusChanged",
+        "type":  "event"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "uint256",
+                           "name":  "serviceDate",
+                           "type":  "uint256"
+                       },
+                       {
+                           "internalType":  "uint256",
+                           "name":  "mileage",
+                           "type":  "uint256"
+                       },
+                       {
+                           "internalType":  "uint256",
+                           "name":  "cost",
+                           "type":  "uint256"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "serviceType",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "description",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "bytes32",
+                           "name":  "receiptHash",
+                           "type":  "bytes32"
+                       }
+                   ],
+        "name":  "addServiceRecord",
+        "outputs":  [
+                        {
+                            "internalType":  "uint256",
+                            "name":  "",
+                            "type":  "uint256"
+                        }
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+
+                   ],
+        "name":  "admin",
+        "outputs":  [
+                        {
+                            "internalType":  "address",
+                            "name":  "",
+                            "type":  "address"
+                        }
+                    ],
+        "stateMutability":  "view",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "address",
+                           "name":  "wallet",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "approveWorkshop",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "uint256",
+                           "name":  "serviceId",
+                           "type":  "uint256"
+                       }
+                   ],
+        "name":  "cancelServiceRecord",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "deactivateVehicle",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "address",
+                           "name":  "wallet",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "deactivateWorkshop",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "uint256",
+                           "name":  "serviceId",
+                           "type":  "uint256"
+                       }
+                   ],
+        "name":  "getServiceRecord",
+        "outputs":  [
+                        {
+                            "components":  [
+                                               {
+                                                   "internalType":  "uint256",
+                                                   "name":  "serviceId",
+                                                   "type":  "uint256"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "vehicleId",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "address",
+                                                   "name":  "workshop",
+                                                   "type":  "address"
+                                               },
+                                               {
+                                                   "internalType":  "uint256",
+                                                   "name":  "serviceDate",
+                                                   "type":  "uint256"
+                                               },
+                                               {
+                                                   "internalType":  "uint256",
+                                                   "name":  "mileage",
+                                                   "type":  "uint256"
+                                               },
+                                               {
+                                                   "internalType":  "uint256",
+                                                   "name":  "cost",
+                                                   "type":  "uint256"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "serviceType",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "description",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "bytes32",
+                                                   "name":  "serviceHash",
+                                                   "type":  "bytes32"
+                                               },
+                                               {
+                                                   "internalType":  "bool",
+                                                   "name":  "exists",
+                                                   "type":  "bool"
+                                               },
+                                               {
+                                                   "internalType":  "bool",
+                                                   "name":  "cancelled",
+                                                   "type":  "bool"
+                                               }
+                                           ],
+                            "internalType":  "struct ServiceChain.ServiceRecord",
+                            "name":  "",
+                            "type":  "tuple"
+                        }
+                    ],
+        "stateMutability":  "view",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "getVehicle",
+        "outputs":  [
+                        {
+                            "components":  [
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "vehicleId",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "address",
+                                                   "name":  "owner",
+                                                   "type":  "address"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "brand",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "model",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "licensePlate",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "bool",
+                                                   "name":  "active",
+                                                   "type":  "bool"
+                                               },
+                                               {
+                                                   "internalType":  "bool",
+                                                   "name":  "registered",
+                                                   "type":  "bool"
+                                               },
+                                               {
+                                                   "internalType":  "string",
+                                                   "name":  "color",
+                                                   "type":  "string"
+                                               },
+                                               {
+                                                   "internalType":  "uint256",
+                                                   "name":  "year",
+                                                   "type":  "uint256"
+                                               }
+                                           ],
+                            "internalType":  "struct ServiceChain.Vehicle",
+                            "name":  "",
+                            "type":  "tuple"
+                        }
+                    ],
+        "stateMutability":  "view",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "getVehicleServiceHistory",
+        "outputs":  [
+                        {
+                            "internalType":  "uint256[]",
+                            "name":  "",
+                            "type":  "uint256[]"
+                        }
+                    ],
+        "stateMutability":  "view",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+
+                   ],
+        "name":  "nextServiceId",
+        "outputs":  [
+                        {
+                            "internalType":  "uint256",
+                            "name":  "",
+                            "type":  "uint256"
+                        }
+                    ],
+        "stateMutability":  "view",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "brand",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "model",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "licensePlate",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "color",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "uint256",
+                           "name":  "vehicleYear",
+                           "type":  "uint256"
+                       }
+                   ],
+        "name":  "registerVehicle",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "name",
+                           "type":  "string"
+                       }
+                   ],
+        "name":  "registerWorkshop",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "address",
+                           "name":  "wallet",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "rejectWorkshop",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "address",
+                           "name":  "newOwner",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "transferVehicleOwnership",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "string",
+                           "name":  "vehicleId",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "brand",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "model",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "licensePlate",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "string",
+                           "name":  "color",
+                           "type":  "string"
+                       },
+                       {
+                           "internalType":  "uint256",
+                           "name":  "vehicleYear",
+                           "type":  "uint256"
+                       }
+                   ],
+        "name":  "updateVehicle",
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable",
+        "type":  "function"
+    },
+    {
+        "inputs":  [
+                       {
+                           "internalType":  "address",
+                           "name":  "",
+                           "type":  "address"
+                       }
+                   ],
+        "name":  "workshops",
+        "outputs":  [
+                        {
+                            "internalType":  "string",
+                            "name":  "name",
+                            "type":  "string"
+                        },
+                        {
+                            "internalType":  "enum ServiceChain.WorkshopStatus",
+                            "name":  "status",
+                            "type":  "uint8"
+                        },
+                        {
+                            "internalType":  "bool",
+                            "name":  "registered",
+                            "type":  "bool"
+                        }
+                    ],
+        "stateMutability":  "view",
+        "type":  "function"
+    }
+]

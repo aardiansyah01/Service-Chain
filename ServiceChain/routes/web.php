@@ -39,6 +39,11 @@ Route::prefix('owner')
         Route::post('/vehicles', [OwnerController::class, 'storeVehicle'])
             ->name('vehicles.store');
 
+        Route::post('/vehicles/prepare', [
+            OwnerController::class,
+            'prepareVehicleRegistration'
+        ])->name('vehicles.prepare');
+
         Route::get('/history', [OwnerController::class, 'history'])
             ->name('history');
 
@@ -60,6 +65,11 @@ Route::prefix('workshop')
         Route::get('/records', [WorkshopController::class, 'records'])
             ->name('records.index');
 
+        Route::post('/records/prepare', [
+            WorkshopController::class,
+            'prepareRecord',
+        ])->name('records.prepare');
+
         Route::post('/records', [WorkshopController::class, 'storeRecord'])
             ->name('records.store');
 
@@ -71,6 +81,12 @@ Route::prefix('workshop')
 
         Route::put('/profile', [WorkshopController::class, 'updateProfile'])
             ->name('profile.update');
+
+        Route::post('/wallet/check', [WorkshopController::class, 'checkWallet',])
+            ->name('wallet.check');
+
+        Route::post('/wallet/connect', [WorkshopController::class, 'connectWallet',])
+            ->name('wallet.connect');
 
         // Search
         Route::get('/vehicles/search', function (Request $request) {

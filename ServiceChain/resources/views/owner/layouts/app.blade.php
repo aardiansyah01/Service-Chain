@@ -12,6 +12,9 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/owner.css') }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 <body>
     <div class="owner-layout">
@@ -76,10 +79,12 @@
                         </div>
                     </div>
 
-                    <button type="button"
-                            class="notification-button"
-                            aria-label="Notifikasi">
-                        <i class="bi bi-bell"></i>
+                    <button
+                        type="button"
+                        id="connect-wallet-btn"
+                        class="wallet-connect-button"
+                    >
+                        Hubungkan Wallet
                     </button>
 
                     <div class="profile-summary">

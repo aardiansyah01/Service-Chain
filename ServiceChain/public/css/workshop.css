@@ -1476,3 +1476,48 @@ body.workshop-modal-open {
     color: #2563eb;
     font-size: 12px;
 }
+
+.workshop-wallet-connect-button {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 9px 14px;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.workshop-wallet-connect-button:hover {
+    background: #f1f5f9;
+}
+
+.workshop-wallet-connect-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+#workshopWalletStatus {
+    margin: 0;
+    font-size: 12px;
+}
+
+.break-wallet {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+#detailReceiptLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+#detailReceiptLink:hover {
+    text-decoration: underline;
+}
