@@ -12,6 +12,9 @@ import "./services/workshopServiceRecord";
 import "./services/adminWallet";
 import "./services/adminServiceHistory";
 import "./services/workshopServiceHistory";
+import "./services/databaseCleanUpChainUi";
+import "./services/visitorVerification";
+import "./services/workshopCancelServiceRecord";
 
 console.log("ServiceChain app.js berhasil dimuat");
 
@@ -354,6 +357,52 @@ document.addEventListener("DOMContentLoaded", () => {
                     : "-";
         }
     }
+
+    const ownerServiceRows = document.querySelectorAll(".js-service-row");
+    const detailStatusBanner = document.getElementById(
+        "detailServiceStatusBanner",
+    );
+
+    async function refreshOwnerServiceStatus(row) {
+        const serviceId = String(row.dataset.serviceId || "").trim();
+        const badge = row.querySelector(".js-chain-service-status");
+
+        if (!badge) return;
+
+        if (!/^[1-9]\d*$/.test(serviceId)) {
+            badge.textContent = "Status tidak tersedia di blockchain";
+            badge.className =
+                "history-service-status js-chain-service-status is-unavailable";
+            return;
+        }
+
+        badge.textContent = "Memeriksa status...";
+        badge.className =
+            "history-service-status js-chain-service-status is-checking";
+
+        try {
+            const record = await getServiceRecordFromBlockchain(serviceId);
+            const cancelled = Boolean(record.cancelled);
+
+            badge.textContent = cancelled ? "Dibatalkan" : "Tersimpan";
+            badge.className =
+                "history-service-status js-chain-service-status " +
+                (cancelled ? "is-cancelled" : "is-active");
+
+            row.dataset.serviceCancelled = String(cancelled);
+            row.classList.toggle("is-service-cancelled", cancelled);
+        } catch (error) {
+            console.error(`Gagal membaca status servis ${serviceId}:`, error);
+
+            badge.textContent = "Status tidak dapat diperiksa";
+            badge.className =
+                "history-service-status js-chain-service-status is-unavailable";
+        }
+    }
+
+    ownerServiceRows.forEach((row) => {
+        refreshOwnerServiceStatus(row);
+    });
 
     function openDetailModal() {
         modal.classList.add("is-open");
@@ -778,6 +827,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 button.dataset.serviceId,
             );
 
+            if (detailStatusBanner) {
+                detailStatusBanner.hidden = false;
+
+                detailStatusBanner.className =
+                    "history-service-status-banner " +
+                    (record.cancelled ? "is-cancelled" : "is-active");
+
+                detailStatusBanner.textContent = record.cancelled
+                    ? "CATATAN SERVIS DIBATALKAN — Catatan ini sudah dibatalkan " +
+                      "oleh bengkel melalui blockchain. Data tetap tersedia " +
+                      "sebagai jejak audit."
+                    : "CATATAN SERVIS TERSIMPAN — Belum dibatalkan di blockchain.";
+            }
+
             setText("detailServiceId", record.serviceId);
             setText("detailVehicle", record.vehicle);
             setText("detailVehicleId", record.vehicleId);
@@ -822,6 +885,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Gagal membaca riwayat servis dari blockchain:",
                 error,
             );
+
+            if (detailStatusBanner) {
+                detailStatusBanner.hidden = false;
+                detailStatusBanner.className =
+                    "history-service-status-banner is-unavailable";
+                detailStatusBanner.textContent =
+                    "Status catatan tidak dapat diperiksa dari blockchain.";
+            }
 
             setText("detailVehicle", "Gagal memuat blockchain");
             setText("detailVehicleId", "-");

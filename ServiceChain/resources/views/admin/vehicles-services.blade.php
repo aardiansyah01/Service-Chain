@@ -23,14 +23,6 @@
             >
         </div>
 
-        <select name="service_type" class="management-select" aria-label="Filter jenis servis">
-            <option value="all" @selected($serviceType === 'all')>Semua jenis servis</option>
-            @foreach ($serviceTypes as $type)
-                <option value="{{ $type }}" @selected($serviceType === $type)>
-                    {{ $type }}
-                </option>
-            @endforeach
-        </select>
 
         <select name="sort" class="management-select sort-select" aria-label="Urutkan catatan">
             <option value="newest" @selected($sort === 'newest')>Terbaru</option>
@@ -101,8 +93,8 @@
                                     data-service-id="{{ $service->service_id }}"
                                     data-owner-name="{{ $service->owner?->name ?? '-' }}"
                                     data-owner-id="{{ $service->owner_id ?? '' }}"
-                                    data-workshop-name="{{ $service->workshop_name ?? '-' }}"
-                                    data-workshop-address="{{ $service->workshop_address ?? '-' }}"
+                                    data-workshop-name="{{ $service->workshop?->workshop_name ?? '-' }}"
+                                    data-workshop-address="{{ trim(($service->workshop?->address ?? '') . ' ' . ($service->workshop?->city ?? '')) ?: '-' }}"
                                     data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
                                 >
                                     <i class="bi bi-eye"></i>

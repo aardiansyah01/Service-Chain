@@ -50,7 +50,7 @@
             >
         </label>
 
-        <select name="status" aria-label="Filter status">
+        <select name="status" id="vehicleStatusFilter" aria-label="Filter status">
             <option value="all" @selected($status === 'all')>
                 Semua status
             </option>
@@ -95,7 +95,7 @@
 
     <div class="vehicles-grid">
         @forelse ($vehicles as $vehicle)
-            <article class="vehicle-card">
+            <article class="vehicle-card" data-vehicle-id="{{ $vehicle->vehicle_id }}" data-chain-status="unknown">
 
                 <div class="vehicle-card-cover">
                     @if (strtolower($vehicle->vehicle_type) === 'motor')
@@ -104,9 +104,9 @@
                         <i class="bi bi-car-front vehicle-cover-icon"></i>
                     @endif
 
-                    <span class="vehicle-status {{ $vehicle->status === 'ACTIVE' ? 'active' : 'inactive' }}">
+                    <span class="vehicle-status js-chain-vehicle-status" data-chain-status="unknown">
                         <i class="bi bi-circle-fill"></i>
-                        {{ $vehicle->status === 'ACTIVE' ? 'Aktif' : 'Tidak aktif' }}
+                        Memuat status blockchain...
                     </span>
                 </div>
 
@@ -114,7 +114,7 @@
                     <h2>{{ $vehicle->brand }} {{ $vehicle->model }}</h2>
 
                     <p class="vehicle-subtitle">
-                        {{ $vehicle->vehicle_type }} <span>·</span> {{ $vehicle->year }}
+                        {{ $vehicle->vehicle_type }} <span>·</span> <span class="js-chain-vehicle-year">Memuat tahun...</span>
                     </p>
 
                     <div class="vehicle-card-id">
@@ -131,12 +131,12 @@
                         data-brand="{{ $vehicle->brand }}"
                         data-model="{{ $vehicle->model }}"
                         data-type="{{ $vehicle->vehicle_type }}"
-                        data-year="{{ $vehicle->year }}"
+                        data-year=""
                         data-plate="{{ $vehicle->license_plate }}"
-                        data-color="{{ $vehicle->color }}"
-                        data-vin="{{ $vehicle->vin }}"
-                        data-status="{{ $vehicle->status }}"
-                        data-registered="{{ $vehicle->registered_at?->format('d M Y, H:i') ?? '-' }}"
+                        data-color=""
+                        data-vin="{{ $vehicle->chassis_number ?? '' }}"
+                        data-status=""
+                        data-registered="{{ $vehicle->created_at?->format('d M Y, H:i') ?? '-' }}"
                     >
                         <span>Lihat Detail</span>
                         <i class="bi bi-arrow-right"></i>
@@ -150,18 +150,18 @@
                 </div>
 
                 <h3>
-                    {{ $search !== '' || $status !== 'all'
+                    {{ $search !== ''
                         ? 'Kendaraan tidak ditemukan'
                         : 'Belum ada kendaraan' }}
                 </h3>
 
                 <p>
-                    {{ $search !== '' || $status !== 'all'
-                        ? 'Coba kata kunci atau filter yang berbeda.'
+                    {{ $search !== ''
+                        ? 'Coba kata kunci pencarian yang berbeda.'
                         : 'Tambahkan kendaraan pertama Anda untuk mulai mencatat riwayat servis.' }}
                 </p>
 
-                @if ($search === '' && $status === 'all')
+                @if ($search === '')
                     <button type="button"
                             class="empty-add-button"
                             id="openVehicleModalEmpty">
@@ -171,6 +171,12 @@
                 @endif
             </div>
         @endforelse
+    </div>
+
+    <div class="vehicles-empty js-vehicle-filter-empty" hidden>
+        <div class="vehicles-empty-icon"><i class="bi bi-car-front"></i></div>
+        <h3>Tidak ada kendaraan dengan status ini</h3>
+        <p>Status kendaraan diperiksa langsung dari blockchain.</p>
     </div>
 
     @if ($vehicles->hasPages())

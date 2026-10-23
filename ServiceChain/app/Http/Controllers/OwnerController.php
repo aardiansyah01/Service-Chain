@@ -22,34 +22,23 @@ class OwnerController extends Controller
 
         $totalVehicles = Vehicle::where('owner_id', $user->id)->count();
 
-        $totalServices = DB::table('service_records as sr')
-            ->join('vehicles as v', 'sr.vehicle_id', '=', 'v.vehicle_id')
-            ->where('v.owner_id', $user->id)
-            ->count();
+        $totalServices = Service::whereHas('vehicle', function ($query) use ($user) {
+            $query->where('owner_id', $user->id);
+        })->count();
 
-        $activeVehicles = Vehicle::where('owner_id', $user->id)
-            ->where('status', 'ACTIVE')
-            ->count();
+        $activeVehicles = 0;
 
         $vehicles = Vehicle::where('owner_id', $user->id)
             ->orderByDesc('created_at')
             ->limit(2)
             ->get();
 
-        $recentServices = DB::table('service_records as sr')
-            ->join('vehicles as v', 'sr.vehicle_id', '=', 'v.vehicle_id')
-            ->where('v.owner_id', $user->id)
-            ->select(
-                'sr.service_id',
-                'sr.service_type',
-                'sr.service_date',
-                'sr.workshop_name',
-                'v.vehicle_id as vehicle_code',
-                'v.brand',
-                'v.model'
-            )
-            ->orderByDesc('sr.service_date')
-            ->orderByDesc('sr.id')
+        $recentServices = Service::with(['vehicle', 'workshop'])
+            ->whereHas('vehicle', function ($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->limit(3)
             ->get();
 
@@ -66,6 +55,9 @@ class OwnerController extends Controller
     {
         $search = trim($request->query('search', ''));
         $status = $request->query('status', 'all');
+        if (!in_array($status, ['all', 'ACTIVE', 'INACTIVE'], true)) {
+            $status = 'all';
+        }
         $sort = $request->query('sort', 'newest');
 
         $query = Auth::user()->vehicles();
@@ -79,13 +71,10 @@ class OwnerController extends Controller
             });
         }
 
-        if (in_array($status, ['ACTIVE', 'INACTIVE'], true)) {
-            $query->where('status', $status);
-        }
 
         switch ($sort) {
             case 'oldest':
-                $query->orderBy('registered_at');
+                $query->orderBy('created_at');
                 break;
 
             case 'name-asc':
@@ -97,7 +86,7 @@ class OwnerController extends Controller
                 break;
 
             default:
-                $query->orderByDesc('registered_at');
+                $query->orderByDesc('created_at');
                 break;
         }
 
@@ -160,20 +149,14 @@ class OwnerController extends Controller
 
             $user->vehicles()->create([
                 'vehicle_id' => $extraData['vehicle_id'],
-                'owner_address' => $walletAddress,
                 'owner_wallet_address' => $walletAddress,
 
                 'vehicle_type' => $vehicleData['vehicle_type'],
                 'brand' => $vehicleData['brand'],
                 'model' => $vehicleData['model'],
-                'year' => $vehicleData['year'],
                 'license_plate' => $vehicleData['license_plate'],
-                'vin' => $vehicleData['vin'],
                 'chassis_number' => $vehicleData['chassis_number'],
-                'color' => $vehicleData['color'],
 
-                'registered_at' => now(),
-                'status' => 'ACTIVE',
                 'sync_status' => 'SYNCED',
             ]);
 
@@ -204,11 +187,6 @@ class OwnerController extends Controller
             ]);
         }
 
-        if (!$request->filled('vin') && $request->filled('chassis_number')) {
-            $request->merge([
-                'vin' => $request->input('chassis_number'),
-            ]);
-        }
 
         return $request->validate([
             'vehicle_type' => ['required', 'string', 'max:50'],
@@ -236,12 +214,6 @@ class OwnerController extends Controller
                 'unique:vehicles,chassis_number',
             ],
 
-            'vin' => [
-                'required',
-                'string',
-                'max:100',
-                'unique:vehicles,vin',
-            ],
 
             'color' => ['required', 'string', 'max:50'],
         ]);
@@ -363,15 +335,6 @@ class OwnerController extends Controller
             256
         );
 
-        $vehicleTopic = '0x' . Keccak::hash($vehicleId, 256);
-
-        $ownerTopic = '0x' . str_pad(
-            strtolower(substr($walletAddress, 2)),
-            64,
-            '0',
-            STR_PAD_LEFT
-        );
-
         $validEventFound = false;
 
         foreach ($receipt['logs'] ?? [] as $log) {
@@ -381,11 +344,57 @@ class OwnerController extends Controller
             );
 
             if (
-                strtolower($log['address'] ?? '') === strtolower($contractAddress) &&
-                isset($topics[0], $topics[1], $topics[2]) &&
-                $topics[0] === strtolower($eventTopic) &&
-                $topics[1] === strtolower($vehicleTopic) &&
-                $topics[2] === strtolower($ownerTopic)
+                strtolower($log['address'] ?? '') !== strtolower($contractAddress) ||
+                !isset($topics[0]) ||
+                $topics[0] !== strtolower($eventTopic)
+            ) {
+                continue;
+            }
+
+            $data = strtolower(
+                preg_replace('/^0x/i', '', $log['data'] ?? '') ?? ''
+            );
+
+            if (strlen($data) < 192 || strlen($data) % 64 !== 0) {
+                continue;
+            }
+
+            $stringOffset = hexdec(substr($data, 0, 64));
+
+            $eventOwner = '0x' . substr($data, 88, 40);
+
+            if (
+                $stringOffset < 64 ||
+                strlen($data) < ($stringOffset * 2) + 64
+            ) {
+                continue;
+            }
+
+            $lengthPosition = $stringOffset * 2;
+            $stringLength = hexdec(
+                substr($data, $lengthPosition, 64)
+            );
+
+            $stringPosition = ($stringOffset + 32) * 2;
+            $vehicleHex = substr(
+                $data,
+                $stringPosition,
+                $stringLength * 2
+            );
+
+            if (strlen($vehicleHex) !== $stringLength * 2) {
+                continue;
+            }
+
+            $eventVehicleId = hex2bin($vehicleHex);
+
+            if ($eventVehicleId === false) {
+                continue;
+            }
+
+            if (
+                $eventVehicleId === $vehicleId &&
+                strtolower($eventOwner) === strtolower($walletAddress)
             ) {
                 $validEventFound = true;
                 break;
@@ -457,7 +466,6 @@ class OwnerController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('service_id', 'like', "%{$search}%")
-                    ->orWhere('service_type', 'like', "%{$search}%")
                     ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
                         $vehicleQuery
                             ->where('vehicle_id', 'like', "%{$search}%")
@@ -469,7 +477,7 @@ class OwnerController extends Controller
 
         switch ($sort) {
             case 'oldest':
-                $query->orderBy('service_date');
+                $query->orderBy('created_at');
                 break;
 
             case 'name-asc':
@@ -497,7 +505,7 @@ class OwnerController extends Controller
                 break;
 
             default:
-                $query->orderByDesc('service_date');
+                $query->orderByDesc('created_at');
                 break;
         }
 

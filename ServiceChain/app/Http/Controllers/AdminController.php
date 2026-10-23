@@ -147,7 +147,6 @@ class AdminController extends Controller
     public function vehiclesServices(Request $request)
     {
         $search = trim($request->query('search', ''));
-        $serviceType = $request->query('service_type', 'all');
         $sort = $request->query('sort', 'newest');
 
         $query = Service::with([
@@ -159,39 +158,32 @@ class AdminController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('service_id', 'like', "%{$search}%")
-                    ->orWhere('service_type', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('workshop_name', 'like', "%{$search}%")
+                    ->orWhere('transaction_hash', 'like', "%{$search}%")
                     ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
                         $vehicleQuery
                             ->where('vehicle_id', 'like', "%{$search}%")
                             ->orWhere('brand', 'like', "%{$search}%")
                             ->orWhere('model', 'like', "%{$search}%")
+                            ->orWhere('license_plate', 'like', "%{$search}%")
                             ->orWhereHas('owner', function ($ownerQuery) use ($search) {
-                                $ownerQuery->where(
-                                    'name',
-                                    'like',
-                                    "%{$search}%"
-                                );
+                                $ownerQuery->where('name', 'like', "%{$search}%");
                             });
                     })
                     ->orWhereHas('owner', function ($ownerQuery) use ($search) {
-                        $ownerQuery->where(
-                            'name',
-                            'like',
-                            "%{$search}%"
-                        );
+                        $ownerQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('workshop', function ($workshopQuery) use ($search) {
+                        $workshopQuery
+                            ->where('workshop_name', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%");
                     });
             });
         }
 
-        if ($serviceType !== 'all') {
-            $query->where('service_type', $serviceType);
-        }
-
         switch ($sort) {
             case 'oldest':
-                $query->orderBy('service_date');
+                $query->orderBy('created_at');
                 break;
 
             case 'name-asc':
@@ -219,23 +211,15 @@ class AdminController extends Controller
                 break;
 
             default:
-                $query->orderByDesc('service_date');
+                $query->orderByDesc('created_at');
                 break;
         }
 
         $services = $query->paginate(10)->withQueryString();
 
-        $serviceTypes = Service::query()
-            ->select('service_type')
-            ->distinct()
-            ->orderBy('service_type')
-            ->pluck('service_type');
-
         return view('admin.vehicles-services', compact(
             'services',
             'search',
-            'serviceType',
-            'serviceTypes',
             'sort'
         ));
     }

@@ -18,18 +18,10 @@
                 name="search"
                 id="historySearch"
                 value="{{ $search }}"
-                placeholder="Cari nama kendaraan, Vehicle ID, atau jenis servis..."
+                placeholder="Cari nama kendaraan atau Vehicle ID..."
             >
         </label>
 
-        <select name="service_type" id="historyType" aria-label="Filter jenis servis">
-            <option value="all" {{ request('service_type', 'all') === 'all' ? 'selected' : '' }}>Semua jenis servis</option>
-            @foreach ($services->getCollection()->pluck('service_type')->unique()->filter() as $type)
-                <option value="{{ $type }}" {{ request('service_type') === $type ? 'selected' : '' }}>
-                    {{ $type }}
-                </option>
-            @endforeach
-        </select>
 
         <select name="sort" id="historySort" aria-label="Urutkan riwayat">
             <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>Terbaru</option>
@@ -84,18 +76,30 @@
 
                             <td>
                                 <span class="js-chain-service-type">Memuat...</span>
+                                <span class="history-service-status js-chain-service-status is-checking">
+                                    Memeriksa status...
+                                </span>
                             </td>
 
                             <td>
                                 <span class="js-chain-service-date">Memuat...</span>
+                                <span class="history-service-status js-chain-service-status is-checking">
+                                    Memeriksa status...
+                                </span>
                             </td>
 
                             <td>
                                 <span class="js-chain-mileage">Memuat...</span>
+                                <span class="history-service-status js-chain-service-status is-checking">
+                                    Memeriksa status...
+                                </span>
                             </td>
 
                             <td>
                                 <span class="js-chain-cost">Memuat...</span>
+                                <span class="history-service-status js-chain-service-status is-checking">
+                                    Memeriksa status...
+                                </span>
                             </td>
                             <td>
                                 <button
@@ -107,13 +111,13 @@
                                     data-vehicle-id="{{ $service->vehicle->vehicle_id }}"
                                     data-owner-name="{{ $service->owner?->name ?? '-' }}"
                                     data-owner-id="{{ $service->owner_id ?? '' }}"
-                                    data-service-type="{{ $service->service_type }}"
-                                    data-date="{{ $service->service_date->translatedFormat('d F Y') }}"
-                                    data-mileage="{{ number_format($service->mileage, 0, ',', '.') }} km"
-                                    data-cost="Rp{{ number_format((float) $service->cost, 0, ',', '.') }}"
-                                    data-workshop="{{ $service->workshop_name }}"
-                                    data-address="{{ $service->workshop_address }}"
-                                    data-description="{{ $service->description }}"
+                                    data-service-type=""
+                                    data-date=""
+                                    data-mileage=""
+                                    data-cost=""
+                                    data-workshop="{{ $service->workshop?->workshop_name ?? '-' }}"
+                                    data-address="{{ trim(($service->workshop?->address ?? '') . ' ' . ($service->workshop?->city ?? '')) ?: '-' }}"
+                                    data-description=""
                                     data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
                                 >
                                     <i class="bi bi-chevron-right"></i>
@@ -161,6 +165,13 @@
                 <span>Service ID</span>
                 <strong id="detailServiceId">-</strong>
             </div>
+
+            <div
+                id="detailServiceStatusBanner"
+                class="history-service-status-banner"
+                role="status"
+                hidden
+            ></div>
 
             <div class="history-detail-grid">
                 <div class="history-detail-field">

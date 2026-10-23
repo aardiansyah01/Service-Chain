@@ -14,13 +14,6 @@ class Service extends Model
         'vehicle_id',
         'owner_id',
         'workshop_id',
-        'workshop_name',
-        'workshop_address',
-        'service_type',
-        'description',
-        'service_date',
-        'cost',
-        'mileage',
         'receipt_cid',
         'receipt_path',
         'service_hash',
@@ -28,27 +21,14 @@ class Service extends Model
         'sync_status',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'service_date' => 'date',
-            'cost' => 'decimal:2',
-            'mileage' => 'integer',
-        ];
-    }
-
     public function vehicle(): BelongsTo
     {
-        return $this->belongsTo(
-            Vehicle::class,
-            'vehicle_id',
-            'vehicle_id'
-        );
+        return $this->belongsTo(Vehicle::class, 'vehicle_id', 'vehicle_id');
     }
 
     public function workshop(): BelongsTo
     {
-        return $this->belongsTo(Workshop::class);
+        return $this->belongsTo(Workshop::class, 'workshop_id');
     }
 
     public function owner(): BelongsTo

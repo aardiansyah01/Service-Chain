@@ -34,7 +34,7 @@
             <p>Total Kendaraan</p>
             <h2>{{ number_format($totalVehicles, 0, ',', '.') }}</h2>
             <small class="positive">
-                {{ $activeVehicles }} kendaraan aktif
+                Status kendaraan diverifikasi melalui blockchain
             </small>
         </div>
     </article>
@@ -84,7 +84,7 @@
 
         <div class="vehicle-list">
             @forelse ($vehicles as $vehicle)
-                <div class="vehicle-row">
+                <div class="vehicle-row js-owner-dashboard-vehicle" data-vehicle-id="{{ $vehicle->vehicle_id }}">
                     <div class="vehicle-icon">
                         @if (strtolower($vehicle->vehicle_type) === 'motor')
                         <i class="bi bi-scooter vehicle-cover-icon"></i>
@@ -99,7 +99,7 @@
                         </strong>
 
                         <small>
-                            {{ $vehicle->vehicle_type }} · {{ $vehicle->year }}
+                            {{ $vehicle->vehicle_type }} · <span class="js-chain-vehicle-year">Memuat tahun...</span>
                         </small>
                     </div>
 
@@ -108,9 +108,9 @@
                         <strong>{{ $vehicle->vehicle_id }}</strong>
                     </div>
 
-                    <span class="status-badge">
+                    <span class="status-badge js-chain-vehicle-status-wrap">
                         <i></i>
-                        {{ $vehicle->status === 'ACTIVE' ? 'Aktif' : 'Nonaktif' }}
+                        <span class="js-chain-vehicle-status">Memuat status...</span>
                     </span>
                 </div>
             @empty
@@ -136,23 +136,21 @@
 
         <div class="activity-list">
             @forelse ($recentServices as $service)
-                <div class="activity-row">
+                <div class="activity-row js-owner-dashboard-service" data-service-id="{{ $service->service_id }}">
                     <div class="activity-icon blue">
                         <i class="bi bi-file-earmark-text"></i>
                     </div>
 
                     <div class="activity-description">
-                        <strong>{{ $service->service_type }}</strong>
+                        <strong class="js-chain-service-type">Memuat jenis servis...</strong>
 
                         <small>
                             {{ $service->brand }} {{ $service->model }}
-                            · {{ $service->workshop_name }}
+                            · {{ $service->workshop?->workshop_name ?? '-' }}
                         </small>
                     </div>
 
-                    <time datetime="{{ $service->service_date }}">
-                        {{ \Carbon\Carbon::parse($service->service_date)->translatedFormat('d M Y') }}
-                    </time>
+                    <time class="js-chain-service-date">Memuat tanggal...</time>
                 </div>
             @empty
                 <div class="dashboard-empty">

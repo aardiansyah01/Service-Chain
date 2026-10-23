@@ -1521,3 +1521,124 @@ body.workshop-modal-open {
 #detailReceiptLink:hover {
     text-decoration: underline;
 }
+
+/* Tombol action tambahan pada tabel Catatan Servis bengkel. */
+.workshop-record-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.workshop-record-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0 12px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fff;
+    color: #b91c1c;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.16s ease,
+        border-color 0.16s ease,
+        opacity 0.16s ease;
+}
+
+.workshop-record-cancel:hover:not(:disabled) {
+    border-color: #f87171;
+    background: #fff1f2;
+}
+
+.workshop-record-cancel:focus-visible {
+    outline: 3px solid rgba(220, 38, 38, 0.22);
+    outline-offset: 2px;
+}
+
+.workshop-record-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.workshop-record-cancel.is-processing {
+    min-width: 125px;
+}
+
+.workshop-record-cancel span {
+    display: inline;
+}
+
+.workshop-record-status.is-stored {
+    color: #047857;
+}
+
+.workshop-record-status.is-cancelled {
+    color: #be123c;
+    background: #fff1f2;
+}
+
+.workshop-record-status.is-unavailable {
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.workshop-record-status.is-checking {
+    color: #64748b;
+    background: #f8fafc;
+}
+
+.workshop-cancel-notice {
+    margin: 16px 0;
+    padding: 13px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    color: #334155;
+    background: #f8fafc;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.workshop-cancel-notice[hidden] {
+    display: none;
+}
+
+.workshop-cancel-notice.is-info {
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+
+.workshop-cancel-notice.is-success {
+    border-color: #a7f3d0;
+    color: #065f46;
+    background: #ecfdf5;
+}
+
+.workshop-cancel-notice.is-error {
+    border-color: #fecaca;
+    color: #991b1b;
+    background: #fef2f2;
+}
+
+@media (max-width: 640px) {
+    .workshop-record-actions {
+        gap: 6px;
+    }
+
+    .workshop-record-cancel {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 10px;
+    }
+
+    .workshop-record-cancel:not(.is-processing) span {
+        display: none;
+    }
+}

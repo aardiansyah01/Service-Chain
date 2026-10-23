@@ -16,6 +16,7 @@
             ->implode('');
     @endphp
 
+    {{-- Header --}}
     <div class="workshop-welcome">
         <div>
             <p class="workshop-business-label">
@@ -36,6 +37,7 @@
         </a>
     </div>
 
+    {{-- Statistik --}}
     <div class="workshop-stats-grid">
 
         <div class="workshop-stat-card">
@@ -47,8 +49,8 @@
                 <p>Total Servis Dicatat</p>
                 <h3>{{ number_format($totalServices, 0, ',', '.') }}</h3>
                 <small>
-                    +{{ number_format($servicesThisMonth, 0, ',', '.') }}
-                    bulan ini
+                    {{ number_format($servicesThisMonth, 0, ',', '.') }}
+                    catatan baru dicatat bulan ini
                 </small>
             </div>
         </div>
@@ -62,8 +64,7 @@
                 <p>Kendaraan Dilayani</p>
                 <h3>{{ number_format($vehiclesServed, 0, ',', '.') }}</h3>
                 <small>
-                    {{ number_format($vehiclesThisMonth, 0, ',', '.') }}
-                    kendaraan bulan ini
+                    kendaraan pada catatan yang dibuat bulan ini
                 </small>
             </div>
         </div>
@@ -74,13 +75,13 @@
             </div>
 
             <div class="workshop-stat-info">
-                <p>Servis Terbaru</p>
+                <p>Catatan Terbaru</p>
 
                 @if ($latestService)
                     <h3>
-                        {{ $latestService->service_date->isToday()
-                            ? 'Hari ini'
-                            : $latestService->service_date->translatedFormat('d M Y') }}
+                        {{ $latestService->created_at->isToday()
+                            ? 'Dicatat hari ini'
+                            : $latestService->created_at->translatedFormat('d M Y') }}
                     </h3>
 
                     <small>
@@ -95,12 +96,13 @@
 
     </div>
 
+    {{-- Catatan servis terbaru --}}
     <section class="workshop-records-card">
 
         <div class="workshop-records-heading">
             <div>
                 <h3>Catatan Servis Terbaru</h3>
-                <p>Aktivitas servis yang tercatat di sistem</p>
+                <p>Catatan servis yang terakhir disinkronkan</p>
             </div>
 
             <a href="{{ route('workshop.records.index') }}">
@@ -124,7 +126,7 @@
 
                 <tbody>
                     @forelse ($recentServices as $service)
-                        <tr>
+                        <tr class="js-workshop-dashboard-service" data-service-id="{{ $service->service_id }}">
                             <td>
                                 <div class="workshop-vehicle-name">
                                     {{ $service->vehicle->brand ?? '-' }}
@@ -136,14 +138,14 @@
                                 </small>
                             </td>
 
-                            <td>{{ $service->service_type }}</td>
+                            <td><span class="js-chain-service-type">Memuat dari blockchain...</span></td>
 
                             <td>
-                                {{ $service->service_date->translatedFormat('d F Y') }}
+                                <span class="js-chain-service-date">Memuat...</span>
                             </td>
 
                             <td>
-                                {{ number_format($service->mileage, 0, ',', '.') }}
+                                <span class="js-chain-service-mileage">Memuat...</span>
                                 km
                             </td>
 

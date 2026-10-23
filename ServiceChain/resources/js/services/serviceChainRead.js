@@ -85,3 +85,15 @@ export async function getServiceRecordFromBlockchain(serviceId) {
         cancelled: record.cancelled,
     };
 }
+
+export async function getVehicleServiceHistoryFromBlockchain(vehicleId) {
+    if (!vehicleId || !String(vehicleId).trim()) {
+        throw new Error("ID kendaraan tidak tersedia.");
+    }
+
+    const contract = getReadContract();
+    const serviceIds = await contract.getVehicleServiceHistory(
+        String(vehicleId).trim(),
+    );
+    return Array.from(serviceIds, (serviceId) => serviceId.toString());
+}

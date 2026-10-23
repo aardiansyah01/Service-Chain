@@ -109,10 +109,6 @@ contract ServiceChain {
         admin = msg.sender;
     }
 
-    // =========================================
-    // WORKSHOP
-    // =========================================
-
     function registerWorkshop(
         string calldata name
     ) external {
@@ -182,10 +178,6 @@ contract ServiceChain {
             WorkshopStatus.INACTIVE
         );
     }
-
-    // =========================================
-    // VEHICLE
-    // =========================================
 
     function registerVehicle(
         string calldata vehicleId,
@@ -307,10 +299,6 @@ contract ServiceChain {
 
         return vehicles[vehicleId];
     }
-
-    // =========================================
-    // SERVICE RECORDS
-    // =========================================
 
     function addServiceRecord(
         string calldata vehicleId,

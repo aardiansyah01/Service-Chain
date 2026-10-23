@@ -3110,3 +3110,51 @@ body.history-detail-open {
 .vehicle-transfer-button:hover {
     background: #1d4ed8;
 }
+
+.history-service-status {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 7px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.history-service-status.is-active,
+.history-service-status-banner.is-active {
+    color: #047857;
+    background: #d1fae5;
+}
+
+.history-service-status.is-cancelled,
+.history-service-status-banner.is-cancelled {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.history-service-status.is-checking,
+.history-service-status.is-unavailable,
+.history-service-status-banner.is-unavailable {
+    color: #475569;
+    background: #e2e8f0;
+}
+
+.history-service-status-banner {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+.history-service-status-banner[hidden] {
+    display: none !important;
+}
+
+tr.is-service-cancelled {
+    background: #fffafa;
+}

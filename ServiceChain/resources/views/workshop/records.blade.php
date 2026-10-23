@@ -36,6 +36,7 @@
 
 <div class="workshop-page workshop-records-page">
 
+    {{-- Header --}}
     <div class="workshop-page-heading">
         <div>
             <h2>Riwayat dan catatan terverifikasi</h2>
@@ -193,19 +194,48 @@
                             </td>
 
                             <td>
-                                <button
-                                    type="button"
-                                    class="workshop-record-detail open-service-detail"
-                                    aria-label="Detail servis"
-                                    data-service-id="{{ $service->service_id }}"
-                                    data-owner-name="{{ $service->owner?->name ?? '-' }}"
-                                    data-owner-id="{{ $service->owner_id ?? '' }}"
-                                    data-workshop-name="{{ $service->workshop_name ?? '-' }}"
-                                    data-workshop-address="{{ $service->workshop_address ?? '-' }}"
-                                    data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
-                                >
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                                <div class="workshop-record-actions">
+                                    <button
+                                        type="button"
+                                        class="workshop-record-detail open-service-detail"
+                                        aria-label="Detail servis"
+                                        data-service-id="{{ $service->service_id }}"
+                                        data-owner-name="{{ $service->owner?->name ?? '-' }}"
+                                        data-owner-id="{{ $service->owner_id ?? '' }}"
+                                        data-workshop-name="{{ $service->workshop?->workshop_name ?? '-' }}"
+                                        data-workshop-address="{{ trim(($service->workshop?->address ?? '') . ' ' . ($service->workshop?->city ?? '')) ?: '-' }}"
+                                        data-receipt-url="{{ $service->receipt_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($service->receipt_path) : '' }}"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
+                                    @if (preg_match('/^[1-9][0-9]*$/', (string) $service->service_id) === 1 && strtoupper((string) $service->sync_status) === 'SYNCED')
+                                        <button
+                                            type="button"
+                                            class="workshop-record-cancel"
+                                            data-cancel-service
+                                            data-service-id="{{ $service->service_id }}"
+                                            data-workshop-wallet="{{ $currentWorkshop?->wallet_address ?? '' }}"
+                                            aria-label="Batalkan catatan servis {{ $service->service_id }}"
+                                            title="Memeriksa status blockchain..."
+                                            disabled
+                                        >
+                                            <i class="bi bi-trash3" aria-hidden="true"></i>
+                                            <span>Batalkan</span>
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="workshop-record-cancel"
+                                            aria-label="Catatan servis tidak dapat dibatalkan"
+                                            title="Hanya catatan dengan Service ID numerik dan sinkronisasi SYNCED yang dapat dibatalkan."
+                                            disabled
+                                        >
+                                            <i class="bi bi-trash3" aria-hidden="true"></i>
+                                            <span>Batalkan</span>
+                                        </button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -657,20 +687,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Modal tambah catatan
     addButton?.addEventListener('click', function (event) {
         event.preventDefault();
         openModal(addModal);
     });
 
-    // Tutup modal
     document.querySelectorAll('[data-close-modal]').forEach(button => {
         button.addEventListener('click', function () {
             closeModal(button.closest('.workshop-modal-overlay'));
         });
     });
 
-    // Tutup modal ketika area luar diklik
     document.querySelectorAll('.workshop-modal-overlay').forEach(modal => {
         modal.addEventListener('click', function (event) {
             if (event.target === modal) {
@@ -679,7 +706,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Tutup modal dengan tombol Escape
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             document.querySelectorAll('.workshop-modal-overlay.show')
@@ -687,7 +713,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Pemilihan dan pencarian kendaraan
     if (
         searchInput &&
         results &&
@@ -700,8 +725,6 @@ document.addEventListener('DOMContentLoaded', function () {
         function selectVehicle(option) {
             const vehicleId = option.dataset.vehicleId || '';
 
-            // Gunakan vehicle_id blockchain/string,
-            // bukan ID numerik primary key MySQL.
             vehicleInput.value = vehicleId;
 
             vehicleNameInput.value =
@@ -744,8 +767,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             results.hidden = false;
 
-            // Pilihan direset hanya ketika isi pencarian berubah,
-            // bukan setiap kali kolom mendapatkan fokus.
             if (clearSelection) {
                 vehicleInput.value = '';
                 vehicleNameInput.value = '';
@@ -780,7 +801,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Pulihkan pilihan kendaraan setelah validasi gagal.
         const oldVehicleId = vehicleInput.value;
 
         if (oldVehicleId) {

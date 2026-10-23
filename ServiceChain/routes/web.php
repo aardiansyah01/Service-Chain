@@ -7,10 +7,16 @@ use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\WorkshopController;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use App\Http\Controllers\VisitorVerificationController;
 
 Route::get('/', function () {
     return view('home');
 });
+
+Route::get('/verifikasi', [VisitorVerificationController::class, 'index'])
+    ->name('visitor.verification');
+Route::get('/verifikasi/metadata/{vehicleId}', [VisitorVerificationController::class, 'metadata'])
+    ->name('visitor.verification.metadata');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])

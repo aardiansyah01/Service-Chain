@@ -571,7 +571,6 @@ class WorkshopController extends Controller
         return $payload['result'] ?? null;
     }
 
-    // record
     public function records(Request $request)
     {
         $workshop = $this->currentWorkshop();
@@ -582,23 +581,24 @@ class WorkshopController extends Controller
         $query = Service::with([
             'vehicle.owner',
             'owner',
+            'workshop',
         ])->where('workshop_id', $workshop->id);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('service_id', 'like', "%{$search}%")
-                    ->orWhere('service_type', 'like', "%{$search}%")
                     ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
                         $vehicleQuery
                             ->where('vehicle_id', 'like', "%{$search}%")
                             ->orWhere('brand', 'like', "%{$search}%")
-                            ->orWhere('model', 'like', "%{$search}%");
+                            ->orWhere('model', 'like', "%{$search}%")
+                            ->orWhere('license_plate', 'like', "%{$search}%");
                     });
             });
         }
 
         if ($sort === 'oldest') {
-            $query->orderBy('service_date');
+            $query->orderBy('created_at');
         } elseif ($sort === 'name') {
             $query->orderBy(
                 Vehicle::select('brand')
@@ -608,13 +608,13 @@ class WorkshopController extends Controller
                     )
             );
         } else {
-            $query->orderByDesc('service_date');
+            $query->orderByDesc('created_at');
         }
 
         $services = $query->paginate(10)->withQueryString();
 
         $vehicles = Vehicle::with('owner')
-            ->where('status', 'ACTIVE')
+            ->where('sync_status', 'SYNCED')
             ->orderBy('brand')
             ->orderBy('model')
             ->get();
@@ -656,12 +656,6 @@ class WorkshopController extends Controller
             'vehicle_id',
             $data['vehicle_id']
         )->firstOrFail();
-
-        abort_unless(
-            $vehicle->status === 'ACTIVE',
-            422,
-            'Kendaraan yang dipilih tidak aktif.'
-        );
 
         return response()->json([
             'ready' => true,
@@ -713,12 +707,6 @@ class WorkshopController extends Controller
             'vehicle_id',
             $data['vehicle_id']
         )->firstOrFail();
-
-        abort_unless(
-            $vehicle->status === 'ACTIVE',
-            422,
-            'Kendaraan yang dipilih tidak aktif.'
-        );
 
         $fileBytes = file_get_contents(
             $data['receipt']->getRealPath()
@@ -842,16 +830,6 @@ class WorkshopController extends Controller
                     'vehicle_id' => $vehicle->vehicle_id,
                     'owner_id' => $vehicle->owner_id,
                     'workshop_id' => $workshop->id,
-                    'workshop_name' => $workshop->workshop_name,
-                    'workshop_address' => trim(
-                        $workshop->address . ', ' . $workshop->city,
-                        ', '
-                    ),
-                    'service_type' => $data['service_type'],
-                    'service_date' => $data['service_date'],
-                    'mileage' => $data['mileage'],
-                    'cost' => $data['cost'],
-                    'description' => $data['description'],
                     'receipt_path' => $receiptPath,
                     'receipt_cid' => null,
                     'service_hash' => $onChain['record']['serviceHash'],
@@ -1113,14 +1091,13 @@ class WorkshopController extends Controller
     public function dashboard()
     {
         $workshop = $this->currentWorkshop();
-
         $servicesQuery = Service::where('workshop_id', $workshop->id);
 
         $totalServices = (clone $servicesQuery)->count();
 
         $servicesThisMonth = (clone $servicesQuery)
-            ->whereMonth('service_date', now()->month)
-            ->whereYear('service_date', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->count();
 
         $vehiclesServed = (clone $servicesQuery)
@@ -1128,19 +1105,19 @@ class WorkshopController extends Controller
             ->count('vehicle_id');
 
         $vehiclesThisMonth = (clone $servicesQuery)
-            ->whereMonth('service_date', now()->month)
-            ->whereYear('service_date', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->distinct()
             ->count('vehicle_id');
 
         $latestService = (clone $servicesQuery)
-            ->orderByDesc('service_date')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->first();
 
-        $recentServices = Service::with('vehicle')
+        $recentServices = Service::with(['vehicle', 'workshop'])
             ->where('workshop_id', $workshop->id)
-            ->orderByDesc('service_date')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(5)
             ->get();
